@@ -1103,7 +1103,7 @@
         import { initializeFirestore, doc, setDoc, getDoc, collection, addDoc, persistentLocalCache, serverTimestamp, increment, updateDoc, runTransaction, onSnapshot } from
             "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-storage.js";
-        import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app-check.js";
+        // import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app-check.js";
 
         // ===== إعدادات Firebase =====
         const firebaseConfig = {
@@ -1118,13 +1118,13 @@
 
         const app = initializeApp(firebaseConfig);
 
-        // ===== تفعيل App Check لحماية Firestore من الاستغلال الخارجي =====
+        /* // ===== تفعيل App Check لحماية Firestore من الاستغلال الخارجي =====
         try {
             initializeAppCheck(app, {
                 provider: new ReCaptchaV3Provider('6LfRPCwtAAAAADOCiJh0X4UZKsCSG12LlffJoy38'),
                 isTokenAutoRefreshEnabled: true
             });
-        } catch (e) { console.warn("⚠️ App Check:", e); }
+        } catch (e) { console.warn("⚠️ App Check:", e); } */
 
         const storage = getStorage(app);
         const db = initializeFirestore(app, { localCache: persistentLocalCache() });

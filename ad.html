@@ -212,7 +212,7 @@
         import { initializeFirestore, doc, setDoc, getDoc, deleteDoc, where, collection, query, orderBy, limit, startAfter, getDocs, persistentLocalCache, writeBatch, onSnapshot, increment, updateDoc, runTransaction, Timestamp } from "firebase/firestore";
         import { getStorage, ref, listAll, deleteObject, getDownloadURL } from "firebase/storage";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "firebase/auth";
-        import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
+        // import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBPk7T-rD_DffpMP13ra7Q_gkOByBNqi5s",
@@ -230,10 +230,10 @@
         const db = initializeFirestore(app, { localCache: persistentLocalCache() });
         const statsRef = doc(db, "config", "stats");
 
-        const appCheck = initializeAppCheck(app, {
+        /* const appCheck = initializeAppCheck(app, {
             provider: new ReCaptchaV3Provider('6LfRPCwtAAAAADOCiJh0X4UZKsCSG12LlffJoy38'),
             isTokenAutoRefreshEnabled: true
-        });
+        }); */
 
         // ===== دوال مساعدة =====
         function escapeHTML(str) {
