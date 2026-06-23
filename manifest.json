@@ -3,12 +3,16 @@
   "short_name": "الأرتقاء",
   "description": "نظام تسجيل وإدارة الطلاب في مدارس الأرتقاء الأهلية",
   "start_url": "/",
+  "id": "/",
+  "scope": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone"],
   "background_color": "#f2f7f6",
   "theme_color": "#084c43",
   "orientation": "portrait-primary",
   "dir": "rtl",
   "lang": "ar",
+  "categories": ["education", "productivity"],
   "icons": [
     {
       "src": "logo.jpg",

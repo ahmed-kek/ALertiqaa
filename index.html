@@ -9,6 +9,9 @@
     <meta name="theme-color" content="#084c43">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="الأرتقاء">
+    <link rel="apple-touch-startup-image" href="logo.jpg" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)">
+    <link rel="apple-touch-icon" href="logo.jpg">
 
     <!-- ===== تحسين الأداء: التحميل المسبق ===== -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -67,8 +70,8 @@
             margin: 0;
         }
         .container {
-            background: rgba(255, 255, 255, .96);
-            backdrop-filter: blur(4px);
+            background: rgba(255, 255, 255, .88);
+            backdrop-filter: blur(12px);
             max-width: 880px;
             width: 100%;
             border-radius: 40px;
@@ -80,10 +83,12 @@
 
         /* ===== الهيدر ===== */
         .header {
-            background: linear-gradient(145deg, #084c43, #0f7264);
+            background: rgba(8, 76, 67, 0.78);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
             padding: 25px 20px;
             text-align: center;
-            border-bottom: 6px solid #b49554;
+            border-bottom: 6px solid rgba(180, 149, 84, 0.5);
         }
         .header .logo-container {
             display: flex;
@@ -279,14 +284,23 @@
         /* ===== أقسام الخطوات ===== */
         .step-section {
             display: none;
-            animation: fadeStep 0.4s ease;
         }
         .step-section.active {
             display: block;
         }
-        @keyframes fadeStep {
-            0% { opacity: 0; transform: translateY(20px); }
-            100% { opacity: 1; transform: translateY(0); }
+        .step-section.slide-in-right {
+            animation: slideInRight 0.4s ease;
+        }
+        .step-section.slide-in-left {
+            animation: slideInLeft 0.4s ease;
+        }
+        @keyframes slideInRight {
+            0% { opacity: 0; transform: translateX(30px); }
+            100% { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes slideInLeft {
+            0% { opacity: 0; transform: translateX(-30px); }
+            100% { opacity: 1; transform: translateX(0); }
         }
         @keyframes confetti {
             0% { transform: translateY(0) rotate(0deg); opacity: 1; }
@@ -299,6 +313,21 @@
         .confetti-piece {
             position: absolute; width: 10px; height: 10px;
             border-radius: 2px; animation: confetti 1.5s ease-out forwards;
+        }
+
+        /* ===== Micro-interactions ===== */
+        button:active { transform: scale(0.97); }
+        input, select, textarea {
+            transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.15s ease;
+        }
+        input:focus, select:focus, textarea:focus {
+            transform: scale(1.005);
+        }
+        .btn-primary, .btn-secondary, .btn-success {
+            transition: transform 0.15s ease, box-shadow 0.3s ease;
+        }
+        .btn-primary:active, .btn-secondary:active, .btn-success:active {
+            transform: scale(0.97);
         }
 
         .step-title {
@@ -645,6 +674,9 @@
             .progress-line {
                 top: 14px;
             }
+            input, select, textarea, button {
+                min-height: 48px;
+            }
         }
     </style>
 </head>
@@ -811,6 +843,10 @@
                 <div class="success-message" id="successMessage">
                     <div class="check-circle"><i class="fas fa-check"></i></div>
                     <h3>✅ تم التسجيل سحابياً بنجاح!</h3>
+                    <div id="regIdDisplay" style="font-size:18px;margin:12px 0;background:#e6fffa;padding:12px 16px;border-radius:12px;display:inline-block;border:1px solid #38a169;">
+                        <i class="fas fa-hashtag" style="color:#0f7264;"></i>
+                        <strong style="color:#084c43;">رقم التسجيل: <span id="regIdValue">---</span></strong>
+                    </div>
                     <p>شكراً لتسجيلكم في مدارس الأرتقاء الأهلية. يرجى الضغط أدناه لتأكيد طلبكم عبر واتساب الإدارة فوراً.</p>
                     <div style="display:flex; flex-direction:column; gap:10px; align-items:center;">
                         <a id="whatsappLink" href="#" target="_blank" class="btn-whatsapp">
@@ -870,7 +906,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
-        import { initializeFirestore, doc, setDoc, getDoc, collection, addDoc, persistentLocalCache, serverTimestamp, increment, updateDoc, runTransaction, onSnapshot } from
+        import { initializeFirestore, doc, setDoc, getDoc, getDocs, collection, addDoc, persistentLocalCache, serverTimestamp, increment, updateDoc, runTransaction, query, where } from
             "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
 
         // import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app-check.js";
@@ -898,6 +934,7 @@
 
         const db = initializeFirestore(app, { localCache: persistentLocalCache() });
         const statsRef = doc(db, "config", "stats");
+        const counterRef = doc(db, "config", "registrationCounter");
 
         // ===== تهيئة عداد Firestore (Counter) لتقليل القراءات =====
         async function initCounter() {
@@ -909,6 +946,11 @@
                         lastReset: new Date().toISOString().split('T')[0],
                         gradeDistribution: {}
                     });
+                }
+                // تهيئة عداد التسجيل
+                const cSnap = await getDoc(counterRef);
+                if (!cSnap.exists()) {
+                    await setDoc(counterRef, { currentNumber: 0 });
                 }
             } catch (e) { /* أول مرة فقط */ }
         }
@@ -929,6 +971,15 @@
             clean = normalizeArabicNumerals(clean);
             if (clean.startsWith('964')) clean = '0' + clean.substring(3);
             return /^07[3-9]\d{8}$/.test(clean);
+        }
+
+        // ===== فحص تكرار الهاتف =====
+        async function checkDuplicatePhone(phone) {
+            try {
+                const q = query(collection(db, "students"), where("phone", "==", phone), limit(5));
+                const snap = await getDocs(q);
+                return snap.docs.some(d => !d.data().deleted);
+            } catch (e) { return false; }
         }
 
         // ===== عناصر الصفحة =====
@@ -967,8 +1018,14 @@
 
         // ===== التنقل بين الخطوات =====
         function goToStep(step) {
-            document.querySelectorAll('.step-section').forEach(el => el.classList.remove('active'));
-            document.querySelector(`.step-section[data-step="${step}"]`).classList.add('active');
+            const prevActive = document.querySelector('.step-section.active');
+            const prevStep = prevActive ? parseInt(prevActive.dataset.step) : step;
+            const direction = step > prevStep ? 'next' : 'prev';
+            document.querySelectorAll('.step-section').forEach(el => {
+                el.classList.remove('active', 'slide-in-right', 'slide-in-left');
+            });
+            const target = document.querySelector(`.step-section[data-step="${step}"]`);
+            target.classList.add('active', direction === 'next' ? 'slide-in-right' : 'slide-in-left');
             updateProgress(step);
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -1125,37 +1182,51 @@
         }
         setupDateRange();
 
-        // ===== متابعة مباشرة لحالة التسجيل (onSnapshot) =====
-        let configUnsubscribe = null;
-
-        function watchRegistrationPortal() {
+        // ===== حالة التسجيل مع تخزين مؤقت (0 قراءات إضافية) =====
+        function getCachedSettings() {
             try {
-                configUnsubscribe = onSnapshot(doc(db, "config", "settings"), (snap) => {
-                    if (snap.exists()) {
-                        const data = snap.data();
-                        const isOpen = data.registrationOpen !== undefined ? data.registrationOpen : true;
-                        closedMsg.style.display = isOpen ? 'none' : 'block';
-                        formContent.classList.toggle('disabled', !isOpen);
-                        if (data.currentAcademicYear) {
-                            activeAcademicYear = data.currentAcademicYear;
-                            yearBadgeLabel.textContent = data.currentAcademicYear;
-                        }
-                    } else {
-                        closedMsg.style.display = 'none';
-                        formContent.classList.remove('disabled');
-                    }
-                }, (err) => {
-                    console.warn("⚠️ فشل متابعة حالة التسجيل:", err);
-                    closedMsg.style.display = 'none';
-                    formContent.classList.remove('disabled');
-                });
-            } catch (e) {
-                console.error("فشل بدء متابعة الحالة:", e);
-                closedMsg.style.display = 'none';
-                formContent.classList.remove('disabled');
+                const cached = localStorage.getItem('alertiqaa_settings');
+                if (cached) {
+                    const parsed = JSON.parse(cached);
+                    if (Date.now() - parsed.timestamp < 300000) return parsed.data; // 5 دقائق
+                }
+            } catch (e) { /* تجاهل */ }
+            return null;
+        }
+        function setCachedSettings(data) {
+            try { localStorage.setItem('alertiqaa_settings', JSON.stringify({ data, timestamp: Date.now() })); } catch (e) { /* تجاهل */ }
+        }
+        async function refreshSettings() {
+            try {
+                const snap = await getDoc(doc(db, "config", "settings"));
+                if (snap.exists()) {
+                    const data = snap.data();
+                    setCachedSettings(data);
+                    return data;
+                }
+            } catch (e) { console.warn("⚠️ فشل جلب الإعدادات:", e); }
+            return null;
+        }
+        function applySettings(data) {
+            if (!data) return;
+            const isOpen = data.registrationOpen !== undefined ? data.registrationOpen : true;
+            closedMsg.style.display = isOpen ? 'none' : 'block';
+            formContent.classList.toggle('disabled', !isOpen);
+            if (data.currentAcademicYear) {
+                activeAcademicYear = data.currentAcademicYear;
+                yearBadgeLabel.textContent = data.currentAcademicYear;
             }
         }
-        watchRegistrationPortal();
+        (async function initSettings() {
+            const cached = getCachedSettings();
+            if (cached) { applySettings(cached); }
+            const fresh = await refreshSettings();
+            if (fresh) applySettings(fresh);
+        })();
+        setInterval(async () => {
+            const fresh = await refreshSettings();
+            if (fresh) applySettings(fresh);
+        }, 300000); // كل 5 دقائق
 
         // ===== معالجة الأرقام العربية =====
         function normalizeArabicNumerals(str) {
@@ -1225,6 +1296,31 @@
             let cleanPhone = document.getElementById('phone').value.trim();
             cleanPhone = normalizeArabicNumerals(cleanPhone.replace(/[\s\-\(\)\+]/g, ''));
             if (cleanPhone.startsWith('964')) cleanPhone = '0' + cleanPhone.substring(3);
+
+            // ===== فحص تكرار الهاتف =====
+            const duplicate = await checkDuplicatePhone(cleanPhone);
+            if (duplicate) {
+                showToast('⚠️ رقم الجوال مستخدم مسبقاً في تسجيل آخر.', 'error');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> تسجيل الطالب';
+                return;
+            }
+
+            // ===== توليد رقم تسجيل فريد =====
+            let registrationId = '';
+            try {
+                const counterNum = await runTransaction(db, async (tx) => {
+                    const snap = await tx.get(counterRef);
+                    const num = (snap.data()?.currentNumber || 0) + 1;
+                    tx.set(counterRef, { currentNumber: num }, { merge: true });
+                    return num;
+                });
+                const yearPrefix = activeAcademicYear.split('-')[0];
+                registrationId = `ERT-${yearPrefix}-${String(counterNum).padStart(4, '0')}`;
+            } catch (e) {
+                registrationId = `ERT-${Date.now()}`;
+            }
+
             const waNumber = "9647850009133";
 
             try {
@@ -1232,6 +1328,8 @@
                 const studentData = {
                     fullName: sName,
                     searchName: normalizeArabicName(sName),
+                    registrationId: registrationId,
+                    status: 'جديد',
                     dob: document.getElementById('dob').value,
                     gender: document.getElementById('gender').value,
                     grade: sGrade,
@@ -1262,7 +1360,9 @@
                                 female: increment(studentData.gender === 'أنثى' ? 1 : 0),
                                 todayCount: data.lastReset === today ? increment(1) : 1,
                                 lastReset: today,
-                                [`gradeDistribution.${gradeKey}`]: increment(1)
+                                [`gradeDistribution.${gradeKey}`]: increment(1),
+                                lastRegisteredName: studentData.fullName,
+                                lastRegisteredTimestamp: serverTimestamp()
                             });
                         } else {
                             const gradeKey = sGrade.replace(/\s+/g, '_');
@@ -1271,16 +1371,19 @@
                                 male: studentData.gender === 'ذكر' ? 1 : 0,
                                 female: studentData.gender === 'أنثى' ? 1 : 0,
                                 todayCount: 1, lastReset: today,
-                                gradeDistribution: { [gradeKey]: 1 }
+                                gradeDistribution: { [gradeKey]: 1 },
+                                lastRegisteredName: studentData.fullName,
+                                lastRegisteredTimestamp: serverTimestamp()
                             });
                         }
                     });
                 } catch (e) { console.error("⚠️ فشل تحديث العداد:", e); }
 
                 const waText = encodeURIComponent(
-                    `مرحباً إدارة مدارس الارتقاء، تم تسجيل (${escapeHTML(studentData.fullName)}) للعام ${escapeHTML(activeAcademicYear)}.`
+                    `مرحباً إدارة مدارس الارتقاء، تم تسجيل الطالب (${escapeHTML(studentData.fullName)}) - رقم التسجيل: ${registrationId} للعام ${escapeHTML(activeAcademicYear)}.`
                 );
                 document.getElementById('whatsappLink').href = `https://wa.me/${waNumber}?text=${waText}`;
+                document.getElementById('regIdValue').textContent = registrationId;
 
                 successMsg.classList.add('show');
                 // تأثير احتفالي بسيط
@@ -1338,11 +1441,6 @@
             document.body.appendChild(toast);
             setTimeout(() => toast.remove(), 3500);
         }
-
-        // ===== تنظيف المستمع عند مغادرة الصفحة =====
-        window.addEventListener('beforeunload', () => {
-            if (configUnsubscribe) configUnsubscribe();
-        });
 
         // ===== بدء النموذج =====
         updateProgress(1);
