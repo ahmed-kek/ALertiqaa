@@ -337,19 +337,10 @@
         // ===== دوال سلة المحذوفات =====
         async function loadTrash() {
             const tbody = document.getElementById('trashTableBody');
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;"><i class="fas fa-spinner fa-spin" style="font-size:24px;color:#0f7264;"></i><p style="margin-top:8px;color:#718096;">جاري تحميل المحذوفات...</p></td></tr>';
             try {
-                const snap = await getDocs(query(collection(db, "students"), where("deleted", "==", true)));
+                const snap = await getDocs(query(collection(db, "students"), where("deleted", "==", true), limit(100)));
                 let docs = snap.docs;
-                // تحديث شارة عدد المحذوفات
-                const badge = document.getElementById('trashBadge');
-                if (badge) {
-                    if (docs.length > 0) {
-                        badge.style.display = 'inline';
-                        badge.textContent = docs.length;
-                    } else {
-                        badge.style.display = 'none';
-                    }
-                }
                 // ترتيب تنازلي حسب deletedAt (يدوياً لتجنب الحاجة إلى index مركب)
                 docs.sort((a, b) => {
                     const ta = a.data().deletedAt ? (a.data().deletedAt.toDate ? a.data().deletedAt.toDate().getTime() : new Date(a.data().deletedAt).getTime()) : 0;
@@ -380,7 +371,24 @@
             const hasPermission = await checkAdminPermission();
             if (!hasPermission) return;
             try {
-                await updateDoc(doc(db, "students", id), { deleted: false, deletedAt: null, restoredAt: Timestamp.fromDate(new Date()) });
+                const snap = await getDoc(doc(db, "students", id));
+                if (!snap.exists()) return;
+                const data = snap.data();
+                const grade = data.grade || 'غير_محدد';
+                const gender = data.gender || '';
+                await runTransaction(db, async (tx) => {
+                    tx.update(doc(db, "students", id), { deleted: false, deletedAt: null, restoredAt: Timestamp.fromDate(new Date()) });
+                    const s = await tx.get(statsRef);
+                    if (s.exists()) {
+                        tx.update(statsRef, {
+                            total: increment(1),
+                            male: increment(gender === 'ذكر' ? 1 : 0),
+                            female: increment(gender === 'أنثى' ? 1 : 0),
+                            deletedCount: increment(-1),
+                            [`gradeDistribution.${grade.replace(/\s+/g, '_')}`]: increment(1)
+                        });
+                    }
+                });
                 showToast('✅ تم استعادة الطالب بنجاح.', 'success');
                 logAction('restore', `تم استعادة طالب (${id})`);
                 loadTrash();
@@ -391,14 +399,20 @@
         window.permanentDeleteStudent = async function(id) {
             const hasPermission = await checkAdminPermission();
             if (!hasPermission) return;
-            if (!confirm('⚠️ هل أنت متأكد من الحذف النهائي؟ لا يمكن التراجع عن هذا الإجراء.')) return;
+            document.getElementById('deleteDocId').value = id;
+            document.getElementById('deleteModal').classList.add('show');
+        };
+
+        async function executePermanentDelete() {
+            const id = document.getElementById('deleteDocId').value;
+            if (!id) return;
             try {
                 const snap = await getDoc(doc(db, "students", id));
                 if (snap.exists()) {
                     const data = snap.data();
                     if (data.sessionUID) await deleteStudentFiles(data.sessionUID);
                 }
-                // خفض العداد
+                // خفض العداد (بما في ذلك deletedCount)
                 if (snap.exists()) {
                     const data = snap.data();
                     await runTransaction(db, async (tx) => {
@@ -411,6 +425,7 @@
                                 total: increment(-1),
                                 male: increment(data.gender === 'ذكر' ? -1 : 0),
                                 female: increment(data.gender === 'أنثى' ? -1 : 0),
+                                deletedCount: increment(-1),
                                 [`gradeDistribution.${gradeKey}`]: increment(-1)
                             });
                         }
@@ -424,7 +439,7 @@
             } catch (e) { showToast('❌ فشل الحذف النهائي: ' + e.message, 'error'); }
         };
 
-        // ===== دوال التبويب =====
+        // ===== دوال التبويب مع إيقاف الـ listeners غير النشطة =====
         function setupTabs() {
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
@@ -434,8 +449,15 @@
                     const tab = document.getElementById(this.dataset.tab);
                     if (tab) {
                         tab.classList.add('active');
-                        if (this.dataset.tab === 'tabTrash') loadTrash();
+                        if (this.dataset.tab === 'tabTrash') {
+                            loadTrash();
+                            // أوقف listener logs عند مغادرة التبويب
+                            if (logsUnsubscribe) { logsUnsubscribe(); logsUnsubscribe = null; logsListenerSetup = false; }
+                        }
                         if (this.dataset.tab === 'tabLogs') setupLogsListener();
+                        if (this.dataset.tab === 'tabHome') {
+                            if (logsUnsubscribe) { logsUnsubscribe(); logsUnsubscribe = null; logsListenerSetup = false; }
+                        }
                     }
                 });
             });
@@ -484,11 +506,11 @@
         // ===== استخدام Set بدلاً من Array للتحسين =====
         const selectedStudentIds = new Set();
 
-        // ===== كاش أسماء الطلاب للبحث المحلي (0 قراءة من Firestore) =====
-        const STUDENT_CACHE_KEY = 'studentSearchCache_v1';
-        let studentNameCache = [];
+        // ===== كاش بيانات الطلاب للبحث المحلي (0 قراءة من Firestore) =====
+        const STUDENT_CACHE_KEY = 'studentSearchCache_v2';
+        let studentCache = [];
+        let cachedTotalFromStats = 0;
         let unsubscribeStats = null;
-        let unsubscribeStudents = null;
 
         // ===== دوال المصادقة =====
         async function login() {
@@ -523,7 +545,6 @@
             logAction('logout', 'تسجيل الخروج من لوحة التحكم');
             try { await signOut(auth); } catch (e) {}
             if (unsubscribeStats) unsubscribeStats();
-            if (unsubscribeStudents) unsubscribeStudents();
             if (unsubscribeConfig) unsubscribeConfig();
             if (logsUnsubscribe) { logsUnsubscribe(); logsListenerSetup = false; }
             loginScreen.style.display = 'flex';
@@ -604,11 +625,24 @@
         }
         function localSearch() {
             const term = searchInput.value.trim();
-            if (!term || studentNameCache.length === 0) return null;
+            if (!term || studentCache.length === 0) return null;
             const normalizedTerm = normalizeForSearch(term);
-            return studentNameCache.filter(s =>
+            const matched = studentCache.filter(s =>
                 s.name && normalizeForSearch(s.name).includes(normalizedTerm)
-            ).map(s => s.id);
+            );
+            if (matched.length === 0) return [];
+            return matched.map(s => ({
+                id: s.id,
+                data: () => ({
+                    fullName: s.name,
+                    grade: s.grade,
+                    gender: s.gender,
+                    parentName: s.parentName,
+                    phone: s.phone,
+                    registeredAt: s.registeredAt ? { toDate: () => new Date(s.registeredAt) } : null,
+                    deleted: false
+                })
+            }));
         }
 
         // ===== بناء قيود الاستعلام (محسّن بدون select) =====
@@ -652,25 +686,12 @@
                 const isLocalSearch = searchResults !== null;
 
                 if (isLocalSearch) {
-                    // بحث محلي: نجلب جميع الطلاب المطابقين (بدون pagination)
-                    const BATCH_SIZE = 10;
-                    let allDocs = [];
-                    for (let i = 0; i < searchResults.length; i += BATCH_SIZE) {
-                        const batch = searchResults.slice(i, i + BATCH_SIZE);
-                        const snaps = await Promise.all(batch.map(id => getDoc(doc(db, "students", id))));
-                        allDocs = allDocs.concat(snaps.filter(s => s.exists()));
-                    }
-                    totalDocs = allDocs.length;
-                    renderTable(allDocs);
-                    // تعطيل pagination أثناء البحث
+                    // بحث محلي: عرض مباشر من الكاش بدون أي getDoc
+                    totalDocs = searchResults.length;
+                    renderTable(searchResults);
                     prevPageBtn.disabled = true;
                     nextPageBtn.disabled = true;
                     pageInfo.textContent = `بحث: ${totalDocs} نتيجة`;
-                    // تحديث كاش الأسماء في الخلفية
-                    if (resetPage && allDocs.length > 0) {
-                        studentNameCache = studentNameCache.map(s => ({ ...s }));
-                        saveStudentNameCache();
-                    }
                     return;
                 }
 
@@ -688,11 +709,7 @@
                 const docs = snapshot.docs;
 
                 if (resetPage) {
-                    // نقرأ العداد بدلاً من getCountFromServer
-                    try {
-                        const statsSnap = await getDoc(statsRef);
-                        totalDocs = statsSnap.exists() ? (statsSnap.data().total || 0) : 0;
-                    } catch (e) { totalDocs = 0; }
+                    totalDocs = cachedTotalFromStats || 0;
                 }
 
                 if (docs.length > 0) {
@@ -716,16 +733,15 @@
             }
         }
 
-        // ===== تحديث كاش الأسماء (تدريجي باستخدام modifiedAt لتقليل القراءات) =====
+        // ===== تحديث كاش الطلاب (بيانات كاملة لتجنب getDoc في البحث) =====
         async function refreshNameCache() {
             try {
                 const CACHE_META_KEY = 'studentCacheMeta_v1';
                 const meta = JSON.parse(localStorage.getItem(CACHE_META_KEY) || '{}');
                 const lastUpdate = meta.lastUpdate ? new Date(meta.lastUpdate) : null;
 
-                if (!lastUpdate || studentNameCache.length === 0) {
-                    // التحميل الأول: نجلب 300 طالب كحد أقصى
-                    let allNames = [];
+                if (!lastUpdate || studentCache.length === 0) {
+                    let allData = [];
                     let lastDoc = null;
                     const MAX_BATCHES = 3;
                     for (let i = 0; i < MAX_BATCHES; i++) {
@@ -733,12 +749,23 @@
                         if (lastDoc) q = query(q, startAfter(lastDoc));
                         const snap = await getDocs(q);
                         if (snap.docs.length === 0) break;
-                        snap.docs.forEach(d => { const dd = d.data(); if (!dd.deleted) allNames.push({ id: d.id, name: dd.fullName || '', modifiedAt: dd.modifiedAt || null }); });
+                        snap.docs.forEach(d => {
+                            const dd = d.data();
+                            if (!dd.deleted) allData.push({
+                                id: d.id,
+                                name: dd.fullName || '',
+                                grade: dd.grade || '',
+                                gender: dd.gender || '',
+                                parentName: dd.parentName || '',
+                                phone: dd.phone || '',
+                                registeredAt: dd.registeredAt ? dd.registeredAt.toMillis() : null,
+                                modifiedAt: dd.modifiedAt || null
+                            });
+                        });
                         lastDoc = snap.docs[snap.docs.length - 1];
                     }
-                    studentNameCache = allNames;
+                    studentCache = allData;
                 } else {
-                    // التحديث التدريجي: فقط الطلاب المعدلين منذ آخر تحديث
                     const changedSnap = await getDocs(query(
                         collection(db, "students"),
                         where("modifiedAt", ">", Timestamp.fromDate(lastUpdate)),
@@ -747,18 +774,28 @@
                     ));
                     if (changedSnap.docs.length > 0) {
                         const changedMap = new Map();
-                        changedSnap.docs.forEach(d => { const dd = d.data(); if (!dd.deleted) changedMap.set(d.id, { id: d.id, name: dd.fullName || '', modifiedAt: dd.modifiedAt || null }); });
-                        // دمج التغييرات في الكاش الموجود
-                        const existingMap = new Map(studentNameCache.map(s => [s.id, s]));
+                        changedSnap.docs.forEach(d => {
+                            const dd = d.data();
+                            if (!dd.deleted) changedMap.set(d.id, {
+                                id: d.id,
+                                name: dd.fullName || '',
+                                grade: dd.grade || '',
+                                gender: dd.gender || '',
+                                parentName: dd.parentName || '',
+                                phone: dd.phone || '',
+                                registeredAt: dd.registeredAt ? dd.registeredAt.toMillis() : null,
+                                modifiedAt: dd.modifiedAt || null
+                            });
+                        });
+                        const existingMap = new Map(studentCache.map(s => [s.id, s]));
                         changedMap.forEach((v, k) => existingMap.set(k, v));
-                        studentNameCache = Array.from(existingMap.values()).slice(0, 300);
+                        studentCache = Array.from(existingMap.values()).slice(0, 300);
                     }
                 }
 
-                // حفظ الكاش مع وقت التحديث
                 localStorage.setItem(CACHE_META_KEY, JSON.stringify({ lastUpdate: Date.now() }));
                 saveStudentNameCache();
-            } catch (e) { console.warn("⚠️ فشل تحديث كاش الأسماء:", e); }
+            } catch (e) { console.warn("⚠️ فشل تحديث كاش الطلاب:", e); }
         }
 
         function renderTable(docs) {
@@ -787,7 +824,7 @@
                 const safePhone = escapeHTML(data.phone || '-');
 
                 const isChecked = selectedStudentIds.has(doc.id) ? 'checked' : '';
-                html += `<tr><td><input type="checkbox" class="student-check" data-id="${doc.id}" style="width:18px;height:18px;cursor:pointer;" ${isChecked}></td><td>${index}</td><td><strong>${safeName}</strong></td><td><span class="badge-grade">${safeGrade}</span></td><td>${safeGender}</td><td>${safeParent}</td><td dir="ltr">${safePhone}</td><td style="font-size:12px;">${formattedDate}<br>${time}</td><td><div class="action-btns"><button class="btn-view" data-id="${doc.id}"><i class="fas fa-eye"></i> عرض</button><button class="btn-delete" data-id="${doc.id}"><i class="fas fa-trash"></i> حذف</button></div></td></tr>`;
+                html += `<tr><td><input type="checkbox" class="student-check" data-id="${doc.id}" style="width:18px;height:18px;cursor:pointer;" ${isChecked}></td><td>${index}</td><td><strong>${safeName}</strong></td><td><span class="badge-grade">${safeGrade}</span></td><td>${safeGender}</td><td>${safeParent}</td><td dir="ltr">${safePhone}</td><td style="font-size:12px;">${formattedDate}<br>${time}</td><td><div class="action-btns"><button class="btn-view" data-id="${doc.id}"><i class="fas fa-eye"></i> عرض</button><button class="btn-delete" data-id="${doc.id}" data-grade="${escapeHTML(data.grade || 'غير_محدد')}" data-gender="${escapeHTML(data.gender || '')}"><i class="fas fa-trash"></i> حذف</button></div></td></tr>`;
                 index++;
             });
             studentsBody.innerHTML = html;
@@ -805,13 +842,41 @@
             document.querySelectorAll('.btn-delete').forEach(btn => {
                 btn.addEventListener('click', async function() {
                     const id = this.dataset.id;
+                    const grade = this.dataset.grade || 'غير_محدد';
+                    const gender = this.dataset.gender || '';
                     const hasPermission = await checkAdminPermission();
                     if (!hasPermission) return;
                     try {
-                        await updateDoc(doc(db, "students", id), { deleted: true, deletedAt: Timestamp.fromDate(new Date()) });
+                        await runTransaction(db, async (tx) => {
+                            tx.update(doc(db, "students", id), { deleted: true, deletedAt: Timestamp.fromDate(new Date()) });
+                            const s = await tx.get(statsRef);
+                            if (s.exists()) {
+                                const gd = s.data().gradeDistribution || {};
+                                tx.update(statsRef, {
+                                    total: increment(-1),
+                                    male: increment(gender === 'ذكر' ? -1 : 0),
+                                    female: increment(gender === 'أنثى' ? -1 : 0),
+                                    deletedCount: increment(1),
+                                    todayCount: increment(0),
+                                    [`gradeDistribution.${grade.replace(/\s+/g, '_')}`]: increment(-1)
+                                });
+                            }
+                        });
                         showToast('🗑️ تم نقل الطالب إلى سلة المحذوفات.', 'warning', 'تراجع', async () => {
                             try {
-                                await updateDoc(doc(db, "students", id), { deleted: false, deletedAt: null });
+                                await runTransaction(db, async (tx) => {
+                                    tx.update(doc(db, "students", id), { deleted: false, deletedAt: null });
+                                    const s = await tx.get(statsRef);
+                                    if (s.exists()) {
+                                        tx.update(statsRef, {
+                                            total: increment(1),
+                                            male: increment(gender === 'ذكر' ? 1 : 0),
+                                            female: increment(gender === 'أنثى' ? 1 : 0),
+                                            deletedCount: increment(-1),
+                                            [`gradeDistribution.${grade.replace(/\s+/g, '_')}`]: increment(1)
+                                        });
+                                    }
+                                });
                                 showToast('✅ تم التراجع عن الحذف.', 'success');
                                 loadStudents(true);
                             } catch (e) { showToast('❌ فشل التراجع.', 'error'); }
@@ -871,8 +936,16 @@
                     maleCount.textContent = d.male ?? 0;
                     femaleCount.textContent = d.female ?? 0;
                     todayCount.textContent = d.todayCount ?? 0;
+                    cachedTotalFromStats = d.total ?? 0;
                     // رسم توزيع الصفوف
                     renderGradeChart(d.gradeDistribution || {});
+                    // تحديث شارة المحذوفات
+                    const badge = document.getElementById('trashBadge');
+                    const dc = d.deletedCount || 0;
+                    if (badge) {
+                        if (dc > 0) { badge.style.display = 'inline'; badge.textContent = dc; }
+                        else { badge.style.display = 'none'; }
+                    }
                 }
             }, (err) => {
                 console.warn("⚠️ خطأ في استماع الإحصائيات:", err);
@@ -910,12 +983,7 @@
                 searchTimeout = setTimeout(() => {
                     currentPage = 0;
                     lastVisible = null;
-                    const results = localSearch();
-                    if (results !== null) {
-                        loadStudents(true);
-                    } else {
-                        loadStudents(true);
-                    }
+                    loadStudents(true);
                 }, 250);
             });
         }
@@ -965,27 +1033,34 @@
             updateBulkActionsBar();
         });
 
-        // ===== تحميل كاش أسماء الطلاب من localStorage =====
+        // ===== تحميل كاش الطلاب من localStorage =====
         function loadStudentNameCache() {
             try {
                 const cached = localStorage.getItem(STUDENT_CACHE_KEY);
                 if (cached) {
                     const data = JSON.parse(cached);
                     if (Date.now() - data.timestamp < 3600000) { // ساعة صلاحية
-                        studentNameCache = data.names || [];
+                        studentCache = data.data || [];
                     }
                 }
-            } catch (e) { studentNameCache = []; }
+            } catch (e) { studentCache = []; }
         }
 
         function saveStudentNameCache() {
             try {
                 localStorage.setItem(STUDENT_CACHE_KEY, JSON.stringify({
-                    names: studentNameCache,
+                    data: studentCache,
                     timestamp: Date.now()
                 }));
             } catch (e) { /* تجاهل */ }
         }
+
+        // ===== إغلاق المودالات عند الضغط على زر الإغلاق =====
+        document.querySelectorAll('[data-close]').forEach(el => {
+            el.addEventListener('click', function() {
+                document.getElementById(this.dataset.close).classList.remove('show');
+            });
+        });
 
         // ===== تحميل بيانات اللوحة =====
         function loadDashboardData() {
@@ -1173,9 +1248,7 @@
 
         // ===== حذف طالب بشكل دائم (من سلة المحذوفات) =====
         document.getElementById('confirmDeleteBtn').addEventListener('click', async function() {
-            const id = document.getElementById('deleteDocId').value;
-            if (!id) return;
-            window.permanentDeleteStudent(id);
+            await executePermanentDelete();
             document.getElementById('deleteModal').classList.remove('show');
         });
 
@@ -1195,19 +1268,60 @@
             try {
                 showToast(`⏳ جاري نقل ${count} طالب إلى سلة المحذوفات...`, 'info');
                 const now = Timestamp.fromDate(new Date());
+                const ids = Array.from(selectedStudentIds);
+
+                // اقرأ بيانات الطلاب لحساب العداد
+                const docSnaps = await Promise.all(ids.map(id => getDoc(doc(db, "students", id))));
+                let maleCount2 = 0, femaleCount2 = 0;
+                const gradeDelta = {};
+                docSnaps.forEach(snap => {
+                    if (snap.exists()) {
+                        const d = snap.data();
+                        if (d.gender === 'ذكر') maleCount2++;
+                        else if (d.gender === 'أنثى') femaleCount2++;
+                        const gk = (d.grade || 'غير_محدد').replace(/\s+/g, '_');
+                        gradeDelta[gk] = (gradeDelta[gk] || 0) + 1;
+                    }
+                });
+
                 const batch = writeBatch(db);
-                for (const id of selectedStudentIds) {
+                for (const id of ids) {
                     batch.update(doc(db, "students", id), { deleted: true, deletedAt: now });
                 }
+                // حدث العداد
+                const s = await getDoc(statsRef);
+                if (s.exists()) {
+                    const updates = { total: increment(-ids.length), deletedCount: increment(ids.length), male: increment(-maleCount2), female: increment(-femaleCount2) };
+                    Object.keys(gradeDelta).forEach(gk => updates[`gradeDistribution.${gk}`] = increment(-gradeDelta[gk]));
+                    batch.update(statsRef, updates);
+                }
                 await batch.commit();
-                const deletedIds = new Set(selectedStudentIds);
+                const deletedIds = new Set(ids);
                 selectedStudentIds.clear();
                 updateBulkActionsBar();
                 showToast(`✅ تم نقل ${count} طالب إلى سلة المحذوفات.`, 'warning', 'تراجع', async () => {
                     try {
+                        const undoSnaps = await Promise.all(Array.from(deletedIds).map(id => getDoc(doc(db, "students", id))));
+                        let umale = 0, ufemale = 0;
+                        const ugradeDelta = {};
+                        undoSnaps.forEach(snap => {
+                            if (snap.exists()) {
+                                const d = snap.data();
+                                if (d.gender === 'ذكر') umale++;
+                                else if (d.gender === 'أنثى') ufemale++;
+                                const gk = (d.grade || 'غير_محدد').replace(/\s+/g, '_');
+                                ugradeDelta[gk] = (ugradeDelta[gk] || 0) + 1;
+                            }
+                        });
                         const undoBatch = writeBatch(db);
                         for (const id of deletedIds) {
                             undoBatch.update(doc(db, "students", id), { deleted: false, deletedAt: null });
+                        }
+                        const s2 = await getDoc(statsRef);
+                        if (s2.exists()) {
+                            const uupdates = { total: increment(ids.length), deletedCount: increment(-ids.length), male: increment(umale), female: increment(ufemale) };
+                            Object.keys(ugradeDelta).forEach(gk => uupdates[`gradeDistribution.${gk}`] = increment(ugradeDelta[gk]));
+                            undoBatch.update(statsRef, uupdates);
                         }
                         await undoBatch.commit();
                         showToast('✅ تم التراجع عن الحذف الجماعي.', 'success');
@@ -1230,13 +1344,12 @@
             let safety = 0;
             while (hasMore && safety < 50) {
                 safety++;
-                let q = query(collection(db, "students"), orderBy("registeredAt", "desc"), limit(BATCH_SIZE));
+                let q = query(collection(db, "students"), where("deleted", "==", false), orderBy("registeredAt", "desc"), limit(BATCH_SIZE));
                 if (lastDoc) q = query(q, startAfter(lastDoc));
                 const snapshot = await getDocs(q);
                 const rawDocs = snapshot.docs;
                 if (rawDocs.length === 0) { hasMore = false; break; }
-                const active = rawDocs.filter(d => !d.data().deleted);
-                allDocs = allDocs.concat(active);
+                allDocs = allDocs.concat(rawDocs);
                 lastDoc = rawDocs[rawDocs.length - 1];
                 if (rawDocs.length < BATCH_SIZE) hasMore = false;
             }
@@ -1303,12 +1416,12 @@
                 const BATCH_SIZE = 100;
 
                 while (hasMore) {
-                    let q = query(collection(db, "students"), orderBy("registeredAt", "desc"), limit(BATCH_SIZE));
+                    let q = query(collection(db, "students"), where("deleted", "==", false), orderBy("registeredAt", "desc"), limit(BATCH_SIZE));
                     if (lastDoc) q = query(q, startAfter(lastDoc));
                     const snapshot = await getDocs(q);
                     const docs = snapshot.docs;
                     if (docs.length === 0) { hasMore = false; break; }
-                    docs.forEach(d => { const dd = d.data(); if (!dd.deleted) allDocs.push({ id: d.id, ...dd }); });
+                    docs.forEach(d => allDocs.push({ id: d.id, ...d.data() }));
                     lastDoc = docs[docs.length - 1];
                     if (docs.length < BATCH_SIZE) hasMore = false;
                 }
