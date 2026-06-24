@@ -1291,13 +1291,27 @@
             return /^07[3-9]\d{8}$/.test(clean);
         }
 
-        // ===== فحص تكرار الهاتف =====
-        async function checkDuplicatePhone(phone) {
+        // ===== فحص التكرار (هاتف + اسم متشابه) =====
+        function normalizeForDedup(str) {
+            if (!str) return '';
+            return String(str).trim().replace(/[أإآا]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').replace(/[^ا-ي ]/g, '').replace(/\s+/g, ' ');
+        }
+        async function checkDuplicate(phone, name) {
             try {
-                const q = query(collection(db, "students"), where("phone", "==", phone), limit(5));
+                const q = query(collection(db, "students"), where("phone", "==", phone), limit(10));
                 const snap = await getDocs(q);
-                return snap.docs.some(d => !d.data().deleted);
-            } catch (e) { return false; }
+                const active = snap.docs.filter(d => !d.data().deleted);
+                if (active.length === 0) return null;
+                // حتى لو الهاتف متكرر، نتأكد إذا كان نفس الاسم
+                const normalName = normalizeForDedup(name);
+                for (const d of active) {
+                    const existing = normalizeForDedup(d.data().fullName);
+                    if (existing === normalName || existing.includes(normalName) || normalName.includes(existing)) {
+                        return { type: 'exact', student: d.data() };
+                    }
+                }
+                return { type: 'phone_only', count: active.length };
+            } catch (e) { return null; }
         }
 
         // ===== عناصر الصفحة =====
@@ -1607,16 +1621,26 @@
             cleanPhone = normalizeArabicNumerals(cleanPhone.replace(/[\s\-\(\)\+]/g, ''));
             if (cleanPhone.startsWith('964')) cleanPhone = '0' + cleanPhone.substring(3);
 
-            // ===== فحص تكرار الهاتف =====
-            showSubmitProgress('الخطوة 2 من 4: فحص التكرار', 'جاري فحص رقم الجوال...', 35);
+            // ===== فحص التكرار =====
+            showSubmitProgress('الخطوة 2 من 4: فحص التكرار', 'جاري فحص البيانات...', 35);
             await delay(300);
-            const duplicate = await checkDuplicatePhone(cleanPhone);
-            if (duplicate) {
-                showToast('⚠️ رقم الجوال مستخدم مسبقاً في تسجيل آخر.', 'error');
-                submitBtn.disabled = false;
-                submitBtn.classList.remove('loading');
-                hideSubmitProgress();
-                return;
+            const dupResult = await checkDuplicate(cleanPhone, sName);
+            if (dupResult) {
+                if (dupResult.type === 'exact') {
+                    showToast('⚠️ هذا الطالب مسجل مسبقاً بنفس الاسم والهاتف.', 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.classList.remove('loading');
+                    hideSubmitProgress();
+                    return;
+                } else {
+                    const confirmDup = confirm(`⚠️ رقم الجوال ${cleanPhone} مستخدم لـ (${dupResult.count}) طالب مسجل. هل تريد متابعة التسجيل؟`);
+                    if (!confirmDup) {
+                        submitBtn.disabled = false;
+                        submitBtn.classList.remove('loading');
+                        hideSubmitProgress();
+                        return;
+                    }
+                }
             }
 
             // ===== توليد رقم تسجيل فريد =====

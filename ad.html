@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة تحكم المدير - مدارس الأرتقاء الأهلية</title>
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#084c43">
+    <meta name="theme-color" content="#063a33">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="الأرتقاء">
@@ -25,65 +25,70 @@
     <style>
         /* ===== متغيرات التصميم (Design Tokens) ===== */
         :root {
-            --primary-dark: #084c43;
-            --primary: #0f7264;
-            --primary-light: #38a169;
-            --accent: #b49554;
-            --accent-light: #e5dcb7;
-            --danger: #e53e3e;
-            --danger-dark: #c53030;
-            --info: #3182ce;
-            --info-dark: #2c5282;
-            --success: #38a169;
-            --success-dark: #2f855a;
-            --bg: #f2f7f6;
+            --primary-dark: #063a33;
+            --primary: #0d6b5c;
+            --primary-light: #2d9d6e;
+            --primary-glow: rgba(13, 107, 92, 0.15);
+            --accent: #b08f4a;
+            --accent-light: #d4c49a;
+            --accent-glow: rgba(176, 143, 74, 0.2);
+            --danger: #dc3545;
+            --danger-dark: #b91c1c;
+            --info: #2563eb;
+            --info-dark: #1d4ed8;
+            --success: #2d9d6e;
+            --success-dark: #166534;
+            --bg: #e8f0ee;
             --bg-card: #ffffff;
             --bg-dark: #1a202c;
-            --text-primary: #1a202c;
-            --text-secondary: #718096;
-            --text-muted: #a0aec0;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
             --text-inverse: #ffffff;
-            --border: #e2e8f0;
-            --border-light: #edf2f7;
+            --border: #cbd5e1;
+            --border-light: #e2e8f0;
             --radius-sm: 12px;
-            --radius-md: 16px;
-            --radius-lg: 24px;
+            --radius-md: 18px;
+            --radius-lg: 28px;
             --radius-xl: 32px;
-            --shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
-            --shadow-md: 0 8px 25px rgba(0,0,0,0.08);
-            --shadow-lg: 0 25px 60px rgba(0,0,0,0.12);
+            --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+            --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+            --shadow-md: 0 8px 30px rgba(0,0,0,0.08);
+            --shadow-lg: 0 25px 60px rgba(6,58,51,0.12);
             --font: 'Cairo', sans-serif;
             --transition: 0.25s ease;
-            --header-grad: linear-gradient(145deg, #084c43, #0f7264);
+            --transition-spring: 0.3s var(--spring);
+            --header-grad: linear-gradient(145deg, #063a33, #0d6b5c);
         }
         /* ===== Dark Mode ===== */
         [data-theme="dark"] {
-            --bg: #1a202c;
-            --bg-card: #2d3748;
-            --bg-dark: #171923;
+            --bg: #0f172a;
+            --bg-card: #1e293b;
+            --bg-dark: #020617;
             --text-primary: #e2e8f0;
-            --text-secondary: #a0aec0;
-            --text-muted: #718096;
-            --border: #4a5568;
-            --border-light: #2d3748;
-            --shadow-sm: 0 2px 8px rgba(0,0,0,0.2);
-            --shadow-md: 0 8px 25px rgba(0,0,0,0.3);
-            --shadow-lg: 0 25px 60px rgba(0,0,0,0.4);
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border: #334155;
+            --border-light: #1e293b;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.3);
+            --shadow-md: 0 8px 25px rgba(0,0,0,0.4);
+            --shadow-lg: 0 25px 60px rgba(0,0,0,0.5);
         }
         /* ===== Auto-detect Dark Mode (when no explicit preference saved) ===== */
         @media (prefers-color-scheme: dark) {
             :root:not([data-theme="light"]) {
-                --bg: #1a202c;
-                --bg-card: #2d3748;
-                --bg-dark: #171923;
+                --bg: #0f172a;
+                --bg-card: #1e293b;
+                --bg-dark: #020617;
                 --text-primary: #e2e8f0;
-                --text-secondary: #a0aec0;
-                --text-muted: #718096;
-                --border: #4a5568;
-                --border-light: #2d3748;
-                --shadow-sm: 0 2px 8px rgba(0,0,0,0.2);
-                --shadow-md: 0 8px 25px rgba(0,0,0,0.3);
-                --shadow-lg: 0 25px 60px rgba(0,0,0,0.4);
+                --text-secondary: #94a3b8;
+                --text-muted: #64748b;
+                --border: #334155;
+                --border-light: #1e293b;
+                --shadow-sm: 0 2px 8px rgba(0,0,0,0.3);
+                --shadow-md: 0 8px 25px rgba(0,0,0,0.4);
+                --shadow-lg: 0 25px 60px rgba(0,0,0,0.5);
             }
             :root:not([data-theme="light"]) .btn-dark-toggle {
                 background: rgba(255,255,255,0.15);
@@ -146,12 +151,12 @@
         .admin-header {
             display: flex; justify-content: space-between; align-items: center;
             flex-wrap: wrap; gap: 15px;
-            background: rgba(8, 76, 67, 0.75);
+            background: linear-gradient(135deg, rgba(6, 58, 51, 0.92), rgba(13, 107, 92, 0.88));
             backdrop-filter: blur(14px);
             -webkit-backdrop-filter: blur(14px);
             padding: 18px 28px; border-radius: var(--radius-lg);
             box-shadow: var(--shadow-md); margin-bottom: 25px;
-            border-bottom: 4px solid rgba(180, 149, 84, 0.5);
+            border-bottom: 4px solid rgba(176, 143, 74, 0.5);
         }
         .admin-header .brand { display: flex; align-items: center; gap: 15px; }
         .admin-header .brand img {
@@ -282,6 +287,12 @@
         .table-wrapper table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 800px; }
         .table-wrapper thead { background: var(--primary-dark); color: #fff; }
         .table-wrapper thead th { padding: 14px 12px; text-align: center; white-space: nowrap; font-weight: 700; }
+        .sortable { cursor: pointer; user-select: none; transition: background 0.2s ease; }
+        .sortable:hover { background: rgba(255,255,255,0.1); }
+        .sortable .sort-icon { font-size: 11px; margin-right: 5px; opacity: 0.4; transition: opacity 0.2s ease; }
+        .sortable:hover .sort-icon { opacity: 1; }
+        .sortable .sort-icon.asc { opacity: 1; color: #fbbf24; }
+        .sortable .sort-icon.desc { opacity: 1; color: #fbbf24; transform: rotate(180deg); }
         .table-wrapper tbody td {
             padding: 12px; text-align: center;
             border-bottom: 1px solid var(--border-light);
@@ -301,10 +312,13 @@
         }
         .badge-grade { background: var(--border); padding: 3px 14px; border-radius: 30px; font-size: 12px; font-weight: 600; color: var(--text-secondary); display: inline-block; }
         .badge-status { padding: 2px 12px; border-radius: 30px; font-size: 12px; font-weight: 700; display: inline-block; white-space: nowrap; }
-        .badge-status.new { background: #bee3f8; color: #2a69ac; }
-        .badge-status.accepted { background: #c6f6d5; color: #22543d; }
-        .badge-status.rejected { background: #fed7d7; color: #9b2c2c; }
-        .badge-status.registered { background: #fefcbf; color: #744210; }
+        .badge-status { cursor: pointer; transition: transform 0.2s ease; }
+        .badge-status:hover { transform: scale(1.1); }
+        .badge-status.new { background: #dbeafe; color: #1e40af; }
+        .badge-status.contacted { background: #fef3c7; color: #92400e; }
+        .badge-status.confirmed { background: #d1fae5; color: #065f46; }
+        .badge-status.withdrawn { background: #fce7f3; color: #9d174d; }
+        .badge-status.cancelled { background: #fee2e2; color: #991b1b; }
         .action-btns { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
         .action-btns button {
             border: none; padding: 6px 14px; border-radius: 10px;
@@ -425,9 +439,22 @@
         }
         .modal-box .detail-row .key { font-weight: 600; color: var(--text-secondary); min-width: 35%; }
         .modal-box .detail-row .value { color: var(--text-primary); font-weight: 500; text-align: left; max-width: 60%; word-break: break-word; }
+        .contact-history { border-top: 1px solid var(--border); margin-top: 10px; }
+        .contact-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border-light); flex-wrap: wrap; }
+        .contact-item:last-child { border-bottom: none; }
+        .contact-badge { padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+        .contact-badge.اتصال { background: #dbeafe; color: #1e40af; }
+        .contact-badge.واتساب { background: #d1fae5; color: #065f46; }
+        .contact-badge.زيارة { background: #fef3c7; color: #92400e; }
+        .contact-badge.ملاحظة { background: #e2e8f0; color: #475569; }
+        .contact-text { flex: 1; font-size: 14px; color: var(--text-primary); min-width: 100px; }
+        .contact-time { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+        .contact-input-row { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
 
         /* ===== أزرار المودال ===== */
         .modal-actions-bar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .wa-template-btn { background: #25d366 !important; font-size: 16px !important; min-width: 42px; justify-content: center; }
+        .wa-template-btn:hover { background: #20ba5a !important; }
         .btn-print-report, .btn-pdf-report {
             padding: 8px 20px; color: #fff; border: none; border-radius: var(--radius-sm);
             cursor: pointer; font-family: var(--font); font-weight: 700;
@@ -604,7 +631,7 @@
             content: ''; position: absolute; top: 0; left: 0; right: 0;
             height: 4px; background: var(--primary);
         }
-        .stat-card.male::before { background: #3182ce; }
+        .stat-card.male::before { background: #2563eb; }
         .stat-card.female::before { background: #d53f8c; }
         .stat-card.today::before { background: #4299e1; }
         .stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
@@ -780,16 +807,16 @@
             <!-- ===== التبويب الأول: الرئيسية ===== -->
             <div id="tabHome" class="tab-section active">
                 <div class="stats-grid">
-                    <div class="stat-card"><div class="stat-info"><h3><i class="fas fa-users" style="color:#b49554;margin-left:6px;"></i> إجمالي الطلاب</h3><p id="totalCount">0</p></div><div class="stat-icon"><i class="fas fa-user-graduate"></i></div></div>
-                    <div class="stat-card male"><div class="stat-info"><h3><i class="fas fa-mars" style="color:#3182ce;margin-left:6px;"></i> الذكور</h3><p id="maleCount">0</p></div><div class="stat-icon"><i class="fas fa-male"></i></div></div>
+                    <div class="stat-card"><div class="stat-info"><h3><i class="fas fa-users" style="color:#b08f4a;margin-left:6px;"></i> إجمالي الطلاب</h3><p id="totalCount">0</p></div><div class="stat-icon"><i class="fas fa-user-graduate"></i></div></div>
+                    <div class="stat-card male"><div class="stat-info"><h3><i class="fas fa-mars" style="color:#2563eb;margin-left:6px;"></i> الذكور</h3><p id="maleCount">0</p></div><div class="stat-icon"><i class="fas fa-male"></i></div></div>
                     <div class="stat-card female"><div class="stat-info"><h3><i class="fas fa-venus" style="color:#d53f8c;margin-left:6px;"></i> الإناث</h3><p id="femaleCount">0</p></div><div class="stat-icon"><i class="fas fa-female"></i></div></div>
                     <div class="stat-card today"><div class="stat-info"><h3><i class="fas fa-calendar-day" style="color:#4299e1;margin-left:6px;"></i> مسجل اليوم</h3><p id="todayCount">0</p></div><div class="stat-icon"><i class="fas fa-calendar-check"></i></div></div>
                 </div>
 
                 <div style="background:#fff;border-radius:20px;padding:20px 25px;margin-bottom:25px;box-shadow:0 4px 15px rgba(0,0,0,0.04);">
                     <div style="display:flex;align-items:center;gap:12px;margin-bottom:15px;">
-                        <i class="fas fa-chart-bar" style="color:#b49554;font-size:20px;"></i>
-                        <span style="font-weight:700;color:#084c43;font-size:16px;">توزيع الصفوف الدراسية</span>
+                        <i class="fas fa-chart-bar" style="color:#b08f4a;font-size:20px;"></i>
+                        <span style="font-weight:700;color:#063a33;font-size:16px;">توزيع الصفوف الدراسية</span>
                         <span style="font-size:12px;color:#a0aec0;font-weight:600;"><i class="fas fa-sync-alt"></i> محدث آنياً</span>
                     </div>
                     <div id="gradeChart" style="height:250px;"><canvas id="gradeCanvas"></canvas></div>
@@ -798,9 +825,9 @@
                 <div class="control-section">
                     <div class="label"><i class="fas fa-toggle-on"></i> حالة بوابة التسجيل</div>
                     <div class="switch-container">
-                        <span style="color:#38a169;font-weight:700;">مفتوح</span>
+                        <span style="color:#2d9d6e;font-weight:700;">مفتوح</span>
                         <label class="switch"><input type="checkbox" id="toggleSwitch"><span class="slider"></span></label>
-                        <span style="color:#e53e3e;font-weight:700;">مغلق</span>
+                        <span style="color:#dc3545;font-weight:700;">مغلق</span>
                         <span id="statusBadge" class="status-badge open">مفتوح ✅</span>
                     </div>
                     <p style="font-size:13px;color:#718096;margin:0;flex:1 1 100%;text-align:center;"><i class="fas fa-sync-alt"></i> ينعكس فوراً على استمارة التسجيل</p>
@@ -812,7 +839,9 @@
                     <div class="advanced-filters hidden" id="advancedFilters">
                         <select id="filterGrade"><option value="">جميع الصفوف</option><option>الأول ابتدائي</option><option>الثاني ابتدائي</option><option>الثالث ابتدائي</option><option>الرابع ابتدائي</option><option>الخامس ابتدائي</option><option>السادس ابتدائي</option><option>الأول متوسط</option><option>الثاني متوسط</option><option>الثالث متوسط</option></select>
                         <select id="filterGender"><option value="">الجميع</option><option value="ذكر">ذكور</option><option value="أنثى">إناث</option></select>
-                        <select id="filterStatus"><option value="">جميع الحالات</option><option value="جديد">جديد</option><option value="مقبول">مقبول</option><option value="مرفوض">مرفوض</option><option value="مسجل نهائياً">مسجل نهائياً</option></select>
+                        <select id="filterStatus"><option value="">جميع الحالات</option><option value="جديد">جديد</option><option value="تم الاتصال">تم الاتصال</option><option value="مؤكد">مؤكد</option><option value="منسحب">منسحب</option><option value="ملغي">ملغي</option></select>
+                        <input type="date" id="filterDateFrom" title="من تاريخ" style="padding:12px 16px;border:2px solid var(--border);border-radius:14px;font-family:var(--font);font-size:14px;background:var(--bg);color:var(--text-primary);min-width:130px;">
+                        <input type="date" id="filterDateTo" title="إلى تاريخ" style="padding:12px 16px;border:2px solid var(--border);border-radius:14px;font-family:var(--font);font-size:14px;background:var(--bg);color:var(--text-primary);min-width:130px;">
                         <select id="filterAcademicYear"><option value="">كل السنوات</option><option value="2026-2027">2026-2027</option></select>
                         <button class="clear-btn" id="clearFiltersBtn"><i class="fas fa-undo"></i> إعادة ضبط</button>
                     </div>
@@ -822,7 +851,7 @@
                     <span class="bulk-info" id="bulkSelectedCount">تم تحديد 0 طالب</span>
                     <div class="bulk-btns">
                         <button class="btn-bulk-export" id="bulkExportBtn"><i class="fas fa-file-csv"></i> تصدير المحدد</button>
-                        <button class="btn-bulk-export" id="bulkStatusBtn" style="background:#b49554;color:#fff;"><i class="fas fa-tags"></i> تغيير الحالة</button>
+                        <button class="btn-bulk-export" id="bulkStatusBtn" style="background:#b08f4a;color:#fff;"><i class="fas fa-tags"></i> تغيير الحالة</button>
                         <button class="btn-bulk-delete" id="bulkDeleteBtn"><i class="fas fa-trash"></i> حذف المحدد</button>
                     </div>
                 </div>
@@ -836,15 +865,15 @@
                         <table>
                             <thead>
                                 <tr>
-                                    <th><input type="checkbox" id="selectAllCheck" style="width:18px;height:18px;cursor:pointer;"></th>
+                                    <th style="width:40px;"><input type="checkbox" id="selectAllCheck" style="width:18px;height:18px;cursor:pointer;"></th>
                                     <th>#</th>
-                                    <th>الاسم الكامل</th>
-                                    <th>الصف</th>
-                                    <th>الجنس</th>
-                                    <th>الحالة</th>
-                                    <th>ولي الأمر</th>
-                                    <th>الجوال</th>
-                                    <th>تاريخ التسجيل</th>
+                                    <th class="sortable" data-sort="fullName"><span>الاسم الكامل</span><i class="fas fa-sort sort-icon"></i></th>
+                                    <th class="sortable" data-sort="grade"><span>الصف</span><i class="fas fa-sort sort-icon"></i></th>
+                                    <th class="sortable" data-sort="gender"><span>الجنس</span><i class="fas fa-sort sort-icon"></i></th>
+                                    <th class="sortable" data-sort="status"><span>الحالة</span><i class="fas fa-sort sort-icon"></i></th>
+                                    <th class="sortable" data-sort="parentName"><span>ولي الأمر</span><i class="fas fa-sort sort-icon"></i></th>
+                                    <th class="sortable" data-sort="phone"><span>الجوال</span><i class="fas fa-sort sort-icon"></i></th>
+                                    <th class="sortable" data-sort="registeredAt"><span>تاريخ التسجيل</span><i class="fas fa-sort sort-icon"></i></th>
                                     <th>الإجراءات</th>
                                 </tr>
                             </thead>
@@ -898,11 +927,14 @@
         <div class="modal-overlay" id="detailModal">
             <div class="modal-box">
                 <button class="close-modal" data-close="detailModal"><i class="fas fa-times"></i></button>
-                <h2><i class="fas fa-user-graduate" style="color:#b49554;"></i> بيانات الطالب المرفقة</h2>
+                <h2><i class="fas fa-user-graduate" style="color:#b08f4a;"></i> بيانات الطالب المرفقة</h2>
                 <div class="modal-actions-bar">
                     <button class="btn-print-report" onclick="printStudentReport()"><i class="fas fa-print"></i> طباعة</button>
                     <button class="btn-pdf-report" onclick="saveAsPDF()"><i class="fas fa-file-pdf"></i> PDF</button>
                     <button class="btn-print-report" id="whatsappContactBtn" style="background:#25d366;"><i class="fab fa-whatsapp"></i> واتساب</button>
+                    <button class="btn-print-report wa-template-btn" data-template="welcome" title="رسالة ترحيب"><i class="fas fa-hand-peace" style="margin-left:0;"></i></button>
+                    <button class="btn-print-report wa-template-btn" data-template="followup" title="متابعة"><i class="fas fa-redo" style="margin-left:0;"></i></button>
+                    <button class="btn-print-report wa-template-btn" data-template="approved" title="قبول"><i class="fas fa-check-circle" style="margin-left:0;color:#2d9d6e;"></i></button>
                 </div>
                 <div id="detailContent"></div>
             </div>
@@ -922,10 +954,10 @@
         <div class="modal-overlay" id="editModal">
             <div class="modal-box" style="max-width:700px;">
                 <button class="close-modal" data-close="editModal"><i class="fas fa-times"></i></button>
-                <h2><i class="fas fa-edit" style="color:#b49554;"></i> تعديل بيانات الطالب</h2>
+                <h2><i class="fas fa-edit" style="color:#b08f4a;"></i> تعديل بيانات الطالب</h2>
                 <div id="editContent"></div>
                 <div style="display:flex;gap:12px;margin-top:20px;flex-wrap:wrap;">
-                    <button id="saveEditBtn" style="padding:12px 35px;background:#38a169;color:#fff;border:none;border-radius:14px;font-weight:700;font-family:var(--font);cursor:pointer;font-size:16px;"><i class="fas fa-save"></i> حفظ التغييرات</button>
+                    <button id="saveEditBtn" style="padding:12px 35px;background:#2d9d6e;color:#fff;border:none;border-radius:14px;font-weight:700;font-family:var(--font);cursor:pointer;font-size:16px;"><i class="fas fa-save"></i> حفظ التغييرات</button>
                     <button class="btn-cancel" data-close="editModal" style="padding:12px 35px;"><i class="fas fa-times"></i> إلغاء</button>
                 </div>
                 <input type="hidden" id="editDocId">
@@ -935,16 +967,17 @@
         <div class="modal-overlay" id="bulkStatusModal">
             <div class="modal-box" style="max-width:400px;text-align:center;">
                 <button class="close-modal" data-close="bulkStatusModal"><i class="fas fa-times"></i></button>
-                <h2><i class="fas fa-tags" style="color:#b49554;"></i> تغيير الحالة الجماعي</h2>
+                <h2><i class="fas fa-tags" style="color:#b08f4a;"></i> تغيير الحالة الجماعي</h2>
                 <p style="color:#718096;margin-bottom:15px;" id="bulkStatusCount">عدد الطلاب المحددين: 0</p>
                 <select id="bulkStatusSelect" style="width:100%;padding:14px;border:2px solid var(--border);border-radius:12px;font-family:var(--font);font-size:16px;">
                     <option value="جديد">جديد</option>
-                    <option value="مقبول">مقبول</option>
-                    <option value="مرفوض">مرفوض</option>
-                    <option value="مسجل نهائياً">مسجل نهائياً</option>
+                    <option value="تم الاتصال">تم الاتصال</option>
+                    <option value="مؤكد">مؤكد</option>
+                    <option value="منسحب">منسحب</option>
+                    <option value="ملغي">ملغي</option>
                 </select>
                 <div style="display:flex;gap:12px;margin-top:20px;justify-content:center;">
-                    <button id="confirmBulkStatusBtn" style="padding:12px 35px;background:#38a169;color:#fff;border:none;border-radius:14px;font-weight:700;font-family:var(--font);cursor:pointer;font-size:16px;"><i class="fas fa-check"></i> تطبيق</button>
+                    <button id="confirmBulkStatusBtn" style="padding:12px 35px;background:#2d9d6e;color:#fff;border:none;border-radius:14px;font-weight:700;font-family:var(--font);cursor:pointer;font-size:16px;"><i class="fas fa-check"></i> تطبيق</button>
                     <button class="btn-cancel" data-close="bulkStatusModal" style="padding:12px 35px;"><i class="fas fa-times"></i> إلغاء</button>
                 </div>
             </div>
@@ -1234,6 +1267,8 @@
         const filterGender = document.getElementById('filterGender');
         const filterAcademicYear = document.getElementById('filterAcademicYear');
         const filterStatus = document.getElementById('filterStatus');
+        const filterDateFrom = document.getElementById('filterDateFrom');
+        const filterDateTo = document.getElementById('filterDateTo');
         const clearFiltersBtn = document.getElementById('clearFiltersBtn');
         const prevPageBtn = document.getElementById('prevPageBtn');
         const nextPageBtn = document.getElementById('nextPageBtn');
@@ -1471,11 +1506,13 @@
             const grade = filterGrade.value;
             const gender = filterGender.value;
             const year = filterAcademicYear.value;
+            const status = filterStatus.value;
 
             constraints.push(where("deleted", "==", false));
             if (year) constraints.push(where("academicYear", "==", year));
             if (grade) constraints.push(where("grade", "==", grade));
             if (gender) constraints.push(where("gender", "==", gender));
+            if (status) constraints.push(where("status", "==", status));
 
             if (!isLocalSearch) {
                 constraints.push(orderBy("registeredAt", "desc"));
@@ -1637,6 +1674,20 @@
         }
 
         function renderTable(docs) {
+            // ترتيب Client-side
+            if (sortField) {
+                docs = [...docs].sort((a, b) => {
+                    let va = a.data()[sortField], vb = b.data()[sortField];
+                    if (sortField === 'registeredAt') {
+                        va = va ? (va.toDate ? va.toDate().getTime() : new Date(va).getTime()) : 0;
+                        vb = vb ? (vb.toDate ? vb.toDate().getTime() : new Date(vb).getTime()) : 0;
+                    } else {
+                        va = String(va || '').trim();
+                        vb = String(vb || '').trim();
+                    }
+                    return sortAsc ? (va > vb ? 1 : -1) : (va < vb ? 1 : -1);
+                });
+            }
             if (docs.length === 0) {
                 studentsBody.innerHTML = `<tr><td colspan="10" class="empty-msg"><i class="fas fa-inbox"></i> لا توجد سجلات مطابقة</td></tr>`;
                 resultCount.textContent = `(عرض 0 من ${totalDocs} طالب)`;
@@ -1661,7 +1712,7 @@
                 const safeParent = escapeHTML(data.parentName || '-');
                 const safePhone = escapeHTML(data.phone || '-');
                 const status = data.status || 'جديد';
-                const statusClass = status === 'جديد' ? 'new' : status === 'مقبول' ? 'accepted' : status === 'مرفوض' ? 'rejected' : 'registered';
+                const statusClass = status === 'جديد' ? 'new' : status === 'تم الاتصال' ? 'contacted' : status === 'مؤكد' ? 'confirmed' : status === 'منسحب' ? 'withdrawn' : status === 'ملغي' ? 'cancelled' : 'new';
 
                 const isChecked = selectedStudentIds.has(doc.id) ? 'checked' : '';
                 html += `<tr><td><input type="checkbox" class="student-check" data-id="${doc.id}" style="width:18px;height:18px;cursor:pointer;" ${isChecked}></td><td>${index}</td><td><strong>${safeName}</strong></td><td><span class="badge-grade">${safeGrade}</span></td><td>${safeGender}</td><td><span class="badge-status ${statusClass}">${status}</span></td><td>${safeParent}</td><td dir="ltr">${safePhone}</td><td style="font-size:12px;">${formattedDate}<br>${time}</td><td><div class="action-btns"><button class="btn-view" data-id="${doc.id}"><i class="fas fa-eye"></i> عرض</button><button class="btn-edit" data-id="${doc.id}"><i class="fas fa-edit"></i> تعديل</button><button class="btn-delete" data-id="${doc.id}" data-grade="${escapeHTML(data.grade || 'غير_محدد')}" data-gender="${escapeHTML(data.gender || '')}"><i class="fas fa-trash"></i> حذف</button></div></td></tr>`;
@@ -1742,7 +1793,7 @@
             if (cached) applyStatsToUI(cached);
             refreshStatsFromFirestore();
             if (statsRefreshInterval) clearInterval(statsRefreshInterval);
-            statsRefreshInterval = setInterval(refreshStatsFromFirestore, 30000);
+            statsRefreshInterval = setInterval(refreshStatsFromFirestore, 120000);
         }
 
         // ===== رسم بياني لتوزيع الصفوف (Chart.js) =====
@@ -1758,7 +1809,7 @@
             }
             const labels = keys.map(k => k.replace(/_/g, ' '));
             const values = keys.map(k => distribution[k] || 0);
-            const colors = ['#084c43','#0f7264','#38a169','#b49554','#3182ce','#4299e1','#667eea','#9f7aea','#d53f8c','#e53e3e'];
+            const colors = ['#063a33','#0d6b5c','#2d9d6e','#b08f4a','#2563eb','#3b82f6','#6366f1','#8b5cf6','#d946ef','#dc3545'];
             if (gradeChartInstance) {
                 gradeChartInstance.data.labels = labels;
                 gradeChartInstance.data.datasets[0].data = values;
@@ -1793,8 +1844,9 @@
         }
 
         function setupFilterDebounce() {
-            const filters = [filterGrade, filterGender, filterAcademicYear, filterStatus];
+            const filters = [filterGrade, filterGender, filterAcademicYear, filterStatus, filterDateFrom, filterDateTo];
             filters.forEach(filter => {
+                if (!filter) return;
                 filter.addEventListener('change', () => {
                     clearTimeout(filterTimeout);
                     filterTimeout = setTimeout(() => {
@@ -2113,21 +2165,21 @@
                 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
                 <style>
                     body { font-family: 'Cairo', sans-serif; padding: 40px; direction: rtl; }
-                    h2 { color: #084c43; border-bottom: 3px solid #b49554; padding-bottom: 10px; }
+                    h2 { color: #063a33; border-bottom: 3px solid #b08f4a; padding-bottom: 10px; }
                     .report-header { text-align: center; margin-bottom: 30px; }
-                    .report-header h1 { color: #084c43; font-size: 24px; margin: 0; }
+                    .report-header h1 { color: #063a33; font-size: 24px; margin: 0; }
                     .report-header small { color: #718096; }
                     .detail-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #edf2f7; font-size: 16px; }
                     .detail-row .key { font-weight: 600; color: #4a5568; }
                     .detail-row .value { color: #1a202c; text-align: left; }
-                    .watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); opacity: 0.08; font-size: 80px; color: #084c43; pointer-events: none; z-index: -1; }
+                    .watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); opacity: 0.08; font-size: 80px; color: #063a33; pointer-events: none; z-index: -1; }
                     @media print { body { padding: 20px; } .watermark { display: block; } }
                 </style></head><body>
                 <div class="watermark"><i class="fas fa-school"></i></div>
                 <div class="report-header">
                     <h1>مدارس الأرتقاء الأهلية</h1>
                     <small>Al-Ertiqaa Private Schools</small>
-                    <hr style="margin:15px 0;border-color:#b49554;">
+                    <hr style="margin:15px 0;border-color:#b08f4a;">
                 </div>
                 ${content.innerHTML}
                 <hr style="margin-top:30px;">
@@ -2240,6 +2292,27 @@
                 content.appendChild(div);
             });
 
+            // ===== سجل التواصل =====
+            const contactDiv = document.createElement('div');
+            contactDiv.className = 'contact-history';
+            contactDiv.innerHTML = `
+                <h4 style="margin:20px 0 10px;font-size:16px;color:var(--primary-dark);border-right:3px solid var(--accent);padding-right:12px;"><i class="fas fa-comments" style="color:var(--accent);margin-left:8px;"></i> سجل التواصل</h4>
+                <div class="contact-list" id="contactList">
+                    ${renderContactHistory(student.contactHistory || [])}
+                </div>
+                <div class="contact-input-row">
+                    <input type="text" id="contactNoteInput" placeholder="أضف ملاحظة تواصل جديدة..." style="flex:1;padding:10px 14px;border:2px solid var(--border);border-radius:12px;font-family:var(--font);font-size:14px;">
+                    <select id="contactTypeSelect" style="padding:10px 14px;border:2px solid var(--border);border-radius:12px;font-family:var(--font);font-size:14px;background:var(--bg);">
+                        <option value="اتصال">اتصال</option>
+                        <option value="واتساب">واتساب</option>
+                        <option value="زيارة">زيارة</option>
+                        <option value="ملاحظة">ملاحظة</option>
+                    </select>
+                    <button class="add-contact-btn" data-student-id="${student.id}" style="padding:10px 20px;background:var(--primary);color:#fff;border:none;border-radius:12px;font-weight:700;font-family:var(--font);cursor:pointer;"><i class="fas fa-plus"></i> إضافة</button>
+                </div>
+            `;
+            content.appendChild(contactDiv);
+
             // ربط زر واتساب برقم الطالب
             const waBtn = document.getElementById('whatsappContactBtn');
             if (waBtn && student.phone) {
@@ -2253,13 +2326,68 @@
                 waBtn.style.display = 'none';
             }
 
+            // ربط قوالب واتساب
+            const waTemplates = {
+                welcome: `السلام عليكم ورحمة الله وبركاته\n\nعائلة الطالب (${escapeHTML(student.fullName)}) المحترمة،\n\nنشكركم على تسجيلكم في مدارس الأرتقاء الأهلية للعام الدراسي ${escapeHTML(student.academicYear || 'الحالي')}. رقم تسجيلكم: ${student.registrationId || 'غير محدد'}.\nسيتم التواصل معكم قريباً لتأكيد القبول.\n\nمع فائق الاحترام،\nإدارة مدارس الأرتقاء الأهلية`,
+                followup: `السلام عليكم\n\nإدارة مدارس الأرتقاء تتابع طلب تسجيل الطالب (${escapeHTML(student.fullName)}) رقم: ${student.registrationId || 'غير محدد'}.\n\nنأمل منكم تأكيد رغبتكم بالالتحاق أو الاستفسار عن أي معلومات إضافية.\n\nشاكرين تعاونكم.`,
+                approved: `السلام عليكم ورحمة الله وبركاته\n\nعائلة الطالب (${escapeHTML(student.fullName)}) المحترمة،\n\nيسرنا إعلامكم بقبول طلب تسجيل ${escapeHTML(student.gender === 'أنثى' ? 'الطالبة' : 'الطالب')} (${escapeHTML(student.fullName)}) في مدارس الأرتقاء الأهلية للعام الدراسي ${escapeHTML(student.academicYear || 'الحالي')}.\n\nيرجى مراجعة الإدارة لاستكمال إجراءات التسجيل.\n\nمع فائق الاحترام،\nإدارة مدارس الأرتقاء الأهلية`
+            };
+            document.querySelectorAll('.wa-template-btn').forEach(btn => {
+                btn.onclick = (e) => {
+                    e.stopPropagation();
+                    const template = waTemplates[btn.dataset.template];
+                    if (template && student.phone) {
+                        const waNum = '964' + student.phone.replace(/^0+/, '');
+                        window.open(`https://wa.me/${waNum}?text=${encodeURIComponent(template)}`, '_blank');
+                    } else if (!student.phone) {
+                        showToast('⚠️ لا يوجد رقم جوال للطالب', 'warning');
+                    }
+                };
+            });
+
             document.getElementById('detailModal').classList.add('show');
         }
+
+        function renderContactHistory(history) {
+            if (!history || history.length === 0) return '<p style="color:var(--text-muted);font-size:14px;padding:10px 0;"><i class="fas fa-info-circle"></i> لا توجد ملاحظات سابقة</p>';
+            return history.slice().reverse().map(h => `
+                <div class="contact-item">
+                    <span class="contact-badge ${h.type}">${h.type}</span>
+                    <span class="contact-text">${escapeHTML(h.note)}</span>
+                    <span class="contact-time">${new Date(h.at).toLocaleString('ar-EG')}</span>
+                </div>
+            `).join('');
+        }
+
+        // ===== إضافة ملاحظة تواصل (استماع على الـ modal) =====
+        document.getElementById('detailModal').addEventListener('click', async function(e) {
+            const btn = e.target.closest('.add-contact-btn');
+            if (!btn) return;
+            const studentId = btn.dataset.studentId;
+            const input = document.getElementById('contactNoteInput');
+            const type = document.getElementById('contactTypeSelect').value;
+            const note = input.value.trim();
+            if (!note) { showToast('⚠️ اكتب نص الملاحظة أولاً', 'warning'); return; }
+            try {
+                const snap = await getDoc(doc(db, 'students', studentId));
+                if (!snap.exists()) { showToast('⚠️ الطالب غير موجود', 'error'); return; }
+                const current = snap.data().contactHistory || [];
+                current.push({ note, type, at: new Date().toISOString() });
+                await updateDoc(doc(db, 'students', studentId), { contactHistory: current, modifiedAt: serverTimestamp() });
+                input.value = '';
+                document.getElementById('contactList').innerHTML = renderContactHistory(current);
+                showToast('✅ تم إضافة الملاحظة', 'success');
+                logAction('note', `إضافة ملاحظة للطالب ${escapeHTML(snap.data().fullName || '')}`);
+            } catch (e) {
+                showToast('⚠️ فشل في حفظ الملاحظة', 'error');
+                console.error(e);
+            }
+        });
 
         // ===== عرض نافذة التعديل =====
         function showEditModal(student) {
             const content = document.getElementById('editContent');
-            const statusOptions = ['جديد', 'مقبول', 'مرفوض', 'مسجل نهائياً'];
+            const statusOptions = ['جديد', 'تم الاتصال', 'مؤكد', 'منسحب', 'ملغي'];
             const statusHTML = statusOptions.map(s =>
                 `<option value="${s}" ${(student.status || 'جديد') === s ? 'selected' : ''}>${s}</option>`
             ).join('');
@@ -2373,6 +2501,8 @@
             filterGender.value = '';
             filterAcademicYear.value = '';
             filterStatus.value = '';
+            filterDateFrom.value = '';
+            filterDateTo.value = '';
             currentPage = 0;
             lastVisible = null;
             loadStudents(true);
@@ -2490,22 +2620,26 @@
         });
 
         // ===== دالة مساعدة لجلب الطلاب بالكامل مع pagination (محسّنة) =====
-        async function fetchAllStudents() {
-            // 1. احصل على العدد الكلي أولاً (0 قراءة للوثائق) - early exit
-            const countSnap = await getCountFromServer(query(
-                collection(db, "students"), where("deleted", "==", false)
-            ));
+        async function fetchAllStudents(dateFrom = null, dateTo = null) {
+            const constraints = [where("deleted", "==", false)];
+            if (dateFrom) constraints.push(where("registeredAt", ">=", dateFrom));
+            if (dateTo) {
+                const end = new Date(dateTo);
+                end.setDate(end.getDate() + 1);
+                constraints.push(where("registeredAt", "<", end));
+            }
+            const countSnap = await getCountFromServer(query(collection(db, "students"), ...constraints));
             const total = countSnap.data().count;
             if (total === 0) return [];
 
-            // 2. جلب تسلسلي محسّن
             const BATCH_SIZE = 100;
             let allDocs = [];
             let lastDoc = null;
             let hasMore = true;
+            const sortConstraints = [...constraints, orderBy("registeredAt", "desc")];
             
             while (hasMore) {
-                let q = query(collection(db, "students"), where("deleted", "==", false), orderBy("registeredAt", "desc"), limit(BATCH_SIZE));
+                let q = query(collection(db, "students"), ...sortConstraints, limit(BATCH_SIZE));
                 if (lastDoc) q = query(q, startAfter(lastDoc));
                 const snapshot = await getDocs(q);
                 const rawDocs = snapshot.docs;
@@ -2529,18 +2663,22 @@
             logAction('export', `تصدير ${pageDocs.length} طالب من الصفحة ${currentPage+1}`);
         });
 
-        // ===== تصدير جميع الطلاب =====
+        // ===== تصدير جميع الطلاب (مع فلترة تاريخ) =====
         exportAllBtn.addEventListener('click', async function() {
             const hasPermission = await checkAdminPermission();
             if (!hasPermission) return;
             try {
-                showToast('⏳ جاري تجهيز ملف التصدير الكامل...', 'info');
-                const allDocs = await fetchAllStudents();
+                const dateFrom = filterDateFrom.value || null;
+                const dateTo = filterDateTo.value || null;
+                if (dateFrom || dateTo) showToast('⏳ جاري تصدير حسب النطاق التاريخي...', 'info');
+                else showToast('⏳ جاري تجهيز ملف التصدير الكامل...', 'info');
+                const allDocs = await fetchAllStudents(dateFrom, dateTo);
                 if (allDocs.length === 0) { showToast('لا توجد بيانات.', 'error'); return; }
                 const csv = generateCSV(allDocs);
-                downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8;' }), `طلاب_الارتقاء_${new Date().toISOString().slice(0,10)}.csv`);
+                const suffix = dateFrom ? `_${dateFrom}_الى_${dateTo || 'now'}` : '';
+                downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8;' }), `طلاب_الارتقاء${suffix}_${new Date().toISOString().slice(0,10)}.csv`);
                 showToast(`✅ تم تصدير ${allDocs.length} طالب بنجاح.`, 'success');
-                logAction('export', `تصدير جميع الطلاب (${allDocs.length})`);
+                logAction('export', `تصدير ${allDocs.length} طالب${suffix.replace(/_/g,' ')}`);
             } catch (e) { showToast('❌ فشل التصدير: ' + e.message, 'error'); }
         });
 
@@ -2696,16 +2834,16 @@
                     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
                     <style>
                         body { font-family: 'Cairo', sans-serif; padding: 40px; direction: rtl; color: #1a202c; background: #fff; }
-                        .header { text-align: center; margin-bottom: 40px; border-bottom: 4px solid #b49554; padding-bottom: 20px; }
-                        .header h1 { color: #084c43; font-size: 28px; margin: 0; }
+                        .header { text-align: center; margin-bottom: 40px; border-bottom: 4px solid #b08f4a; padding-bottom: 20px; }
+                        .header h1 { color: #063a33; font-size: 28px; margin: 0; }
                         .header small { color: #718096; font-size: 14px; }
                         .stats-row { display: flex; gap: 20px; margin-bottom: 30px; flex-wrap: wrap; }
                         .stat-box { flex: 1; min-width: 140px; background: #f7fafc; border-radius: 16px; padding: 20px; text-align: center; border: 1px solid #e2e8f0; }
-                        .stat-box .num { font-size: 32px; font-weight: 800; color: #084c43; }
+                        .stat-box .num { font-size: 32px; font-weight: 800; color: #063a33; }
                         .stat-box .label { font-size: 13px; color: #718096; }
                         table { width: 100%; border-collapse: collapse; margin: 20px 0; }
                         th, td { padding: 10px 14px; border: 1px solid #e2e8f0; text-align: center; }
-                        th { background: #084c43; color: #fff; font-weight: 600; }
+                        th { background: #063a33; color: #fff; font-weight: 600; }
                         .footer-text { text-align: center; color: #a0aec0; font-size: 12px; margin-top: 40px; padding-top: 15px; border-top: 1px solid #e2e8f0; }
                         @media print { body { padding: 20px; } }
                     </style></head><body>
@@ -2715,11 +2853,11 @@
                         <div class="stat-box"><div class="num">${males}</div><div class="label">الذكور</div></div>
                         <div class="stat-box"><div class="num">${females}</div><div class="label">الإناث</div></div>
                     </div>
-                    <h3 style="color:#084c43;">توزيع الصفوف</h3>
+                    <h3 style="color:#063a33;">توزيع الصفوف</h3>
                     <table><tr><th>الصف</th><th>العدد</th></tr>
                     ${Object.entries(grades).sort((a,b) => a[0].localeCompare(b[0], 'ar')).map(([k,v]) => `<tr><td>${k}</td><td>${v}</td></tr>`).join('')}
                     </table>
-                    <h3 style="color:#084c43;">توزيع الحالات</h3>
+                    <h3 style="color:#063a33;">توزيع الحالات</h3>
                     <table><tr><th>الحالة</th><th>العدد</th></tr>
                     ${Object.entries(statuses).map(([k,v]) => `<tr><td>${k}</td><td>${v}</td></tr>`).join('')}
                     </table>
@@ -2749,7 +2887,7 @@
                     // PDF Export All Button
                     const pdfAllBtn = document.createElement('button');
                     pdfAllBtn.className = 'btn-pdf-report';
-                    pdfAllBtn.style.background = '#e53e3e';
+                    pdfAllBtn.style.background = '#dc3545';
                     pdfAllBtn.innerHTML = '<i class="fas fa-file-pdf"></i> PDF الجميع';
                     pdfAllBtn.onclick = window.exportAllToPDF;
                     exportActions.appendChild(pdfAllBtn);
@@ -2835,7 +2973,7 @@
                 title.textContent = 'تقرير جميع الطلاب';
                 title.style.cssText = `
                     text-align: center;
-                    color: #084c43;
+                    color: #063a33;
                     margin-bottom: 20px;
                     font-size: 24px;
                 `;
@@ -2846,15 +2984,15 @@
                 stats.innerHTML = `
                     <div style="display: flex; justify-content: space-around; margin-bottom: 30px;">
                         <div style="text-align: center;">
-                            <div style="font-size: 36px; font-weight: bold; color: #084c43;">${allDocs.length}</div>
+                            <div style="font-size: 36px; font-weight: bold; color: #063a33;">${allDocs.length}</div>
                             <div>إجمالي الطلاب</div>
                         </div>
                         <div style="text-align: center;">
-                            <div style="font-size: 36px; font-weight: bold; color: #0f7264;">${allDocs.filter(d => d.data().gender === 'ذكر').length}</div>
+                            <div style="font-size: 36px; font-weight: bold; color: #0d6b5c;">${allDocs.filter(d => d.data().gender === 'ذكر').length}</div>
                             <div>الذكور</div>
                         </div>
                         <div style="text-align: center;">
-                            <div style="font-size: 36px; font-weight: bold; color: #b49554;">${allDocs.filter(d => d.data().gender === 'أنثى').length}</div>
+                            <div style="font-size: 36px; font-weight: bold; color: #b08f4a;">${allDocs.filter(d => d.data().gender === 'أنثى').length}</div>
                             <div>الإناث</div>
                         </div>
                     </div>
@@ -2872,7 +3010,7 @@
                 // الرأس
                 const thead = document.createElement('thead');
                 thead.innerHTML = `
-                    <tr style="background: #084c43; color: white;">
+                    <tr style="background: #063a33; color: white;">
                         <th style="padding: 10px; border: 1px solid #ddd;">الاسم</th>
                         <th style="padding: 10px; border: 1px solid #ddd;">الهاتف</th>
                         <th style="padding: 10px; border: 1px solid #ddd;">الصف</th>
@@ -3014,7 +3152,7 @@
                             gap: 12px;
                         `;
                         item.innerHTML = `
-                            <i class="${cmd.icon}" style="color: #084c43; width: 20px;"></i>
+                            <i class="${cmd.icon}" style="color: #063a33; width: 20px;"></i>
                             <div>
                                 <div style="font-weight: 600; color: #1a202c;">${cmd.name}</div>
                                 <div style="font-size: 13px; color: #718096;">${cmd.desc}</div>
@@ -3194,10 +3332,24 @@
                             localStorage.setItem('unreadRegistrations', unreadRegistrations.toString());
                         }
                     } catch (e) { /* تجاهل أخطاء الفحص */ }
-                }, 30000); // كل 30 ثانية
+                }, 60000); // كل 60 ثانية (توفير قراءات Firestore)
 
             } catch (e) { console.warn('⚠️ فشل إعداد الإشعارات:', e); }
         }
+
+        // ===== ترتيب الأعمدة (sortable columns) =====
+        let sortField = null, sortAsc = true;
+        document.querySelectorAll('.sortable').forEach(th => {
+            th.addEventListener('click', function() {
+                const field = this.dataset.sort;
+                if (sortField === field) sortAsc = !sortAsc;
+                else { sortField = field; sortAsc = true; }
+                document.querySelectorAll('.sort-icon').forEach(i => i.className = 'fas fa-sort sort-icon');
+                const icon = this.querySelector('.sort-icon');
+                if (icon) icon.className = `fas fa-sort-${sortAsc ? 'up' : 'down'} sort-icon ${sortAsc ? 'asc' : 'desc'}`;
+                loadStudents(true);
+            });
+        });
 
         // ===== رابط العودة لنموذج التسجيل =====
         function addRegistrationFormLink() {
@@ -3207,7 +3359,7 @@
                 backBtn.id = 'backToFormBtn';
                 backBtn.href = 'index.html';
                 backBtn.className = 'btn-print-report';
-                backBtn.style.background = '#084c43';
+                backBtn.style.background = '#063a33';
                 backBtn.style.color = '#fff';
                 backBtn.style.textDecoration = 'none';
                 backBtn.style.display = 'inline-flex';
