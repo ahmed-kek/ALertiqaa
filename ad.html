@@ -735,7 +735,7 @@
             <div class="login-icon"><i class="fas fa-user-shield"></i></div>
             <h2>لوحة تحكم المدير</h2>
             <p>أدخل البريد الإلكتروني وكلمة المرور للدخول إلى نظام الإدارة</p>
-            <form id="loginForm" onsubmit="event.preventDefault(); login();">
+            <form id="loginForm">
                 <input type="email" id="adminEmailInput" placeholder="البريد الإلكتروني" dir="ltr" autocomplete="email" required>
                 <div style="position:relative;width:100%">
                     <input type="password" id="adminPassInput" placeholder="كلمة المرور" dir="ltr" autocomplete="current-password" required>
@@ -1418,6 +1418,7 @@
             }
         });
 
+        document.getElementById('loginForm').addEventListener('submit', (e) => { e.preventDefault(); login(); });
         loginBtn.addEventListener('click', login);
         adminPassInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') login(); });
         document.getElementById('passToggleBtn').addEventListener('click', function() {
