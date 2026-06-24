@@ -981,12 +981,6 @@
                         <label for="notes"><i class="fas fa-sticky-note"></i> ملاحظات إضافية (حالة صحية، احتياجات خاصة، ...)</label>
                         <textarea id="notes" placeholder="أي معلومات أخرى تود إضافتها..."></textarea>
                     </div>
-                    <div class="consent-checkbox">
-                        <input type="checkbox" id="consentCheck" required>
-                        <label for="consentCheck">
-                            أوافق على معالجة بياناتي الشخصية بغرض التسجيل في مدارس الأرتقاء الأهلية <span class="required">*</span>
-                        </label>
-                    </div>
 
                     <div class="form-actions">
                         <button type="submit" class="btn-submit" id="submitBtn">
@@ -1454,14 +1448,6 @@
             // التحقق من جميع الحقول
             if (!validateAll()) {
                 showToast('⚠️ يرجى تصحيح جميع الأخطاء قبل الإرسال.', 'error');
-                return;
-            }
-
-            // التحقق من الموافقة على الخصوصية
-            const consentCheck = document.getElementById('consentCheck');
-            if (consentCheck && !consentCheck.checked) {
-                showToast('⚠️ يرجى الموافقة على سياسة الخصوصية.', 'warning');
-                consentCheck.focus();
                 return;
             }
 
