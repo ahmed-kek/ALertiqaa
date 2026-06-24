@@ -6,8 +6,8 @@
     <title>لوحة تحكم المدير - مدارس الأرتقاء الأهلية</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#084c43">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="الأرتقاء">
     <link rel="apple-touch-icon" href="logo.jpg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -735,12 +735,14 @@
             <div class="login-icon"><i class="fas fa-user-shield"></i></div>
             <h2>لوحة تحكم المدير</h2>
             <p>أدخل البريد الإلكتروني وكلمة المرور للدخول إلى نظام الإدارة</p>
-            <input type="email" id="adminEmailInput" placeholder="البريد الإلكتروني" dir="ltr" autocomplete="email">
-            <div style="position:relative;width:100%">
-                <input type="password" id="adminPassInput" placeholder="كلمة المرور" dir="ltr" autocomplete="current-password">
-                <button type="button" id="passToggleBtn" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:18px;padding:4px;" tabindex="-1" aria-label="إظهار/إخفاء كلمة المرور"><i class="fas fa-eye"></i></button>
-            </div>
-            <button id="loginBtn"><i class="fas fa-sign-in-alt"></i> دخول</button>
+            <form id="loginForm" onsubmit="event.preventDefault(); login();">
+                <input type="email" id="adminEmailInput" placeholder="البريد الإلكتروني" dir="ltr" autocomplete="email" required>
+                <div style="position:relative;width:100%">
+                    <input type="password" id="adminPassInput" placeholder="كلمة المرور" dir="ltr" autocomplete="current-password" required>
+                    <button type="button" id="passToggleBtn" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:18px;padding:4px;" tabindex="-1" aria-label="إظهار/إخفاء كلمة المرور"><i class="fas fa-eye"></i></button>
+                </div>
+                <button type="submit" id="loginBtn"><i class="fas fa-sign-in-alt"></i> دخول</button>
+            </form>
             <div class="login-error" id="loginError"><i class="fas fa-exclamation-circle"></i> بيانات الدخول غير صحيحة</div>
             <div class="login-error warning" id="loginBlockedError"><i class="fas fa-ban"></i> تم حظر الحساب مؤقتاً بسبب كثرة المحاولات. انتظر دقيقة.</div>
         </div>
@@ -1684,8 +1686,21 @@
 
         function nextPage() {
             if (!lastVisible) return;
-            currentPage++;
-            loadStudents(false);
+            const nextPageNum = currentPage + 1;
+            if (prefetchCache && prefetchCache.has(nextPageNum)) {
+                const cached = prefetchCache.get(nextPageNum);
+                currentPage++;
+                renderTable(cached.docs);
+                pageSnapshots[currentPage] = cached;
+                lastVisible = cached.last;
+                firstVisible = cached.first;
+                updatePagination(cached.docs.length);
+                prefetchCache.delete(nextPageNum);
+                nextPageBtn.dispatchEvent(new Event('mouseenter'));
+            } else {
+                currentPage++;
+                loadStudents(false);
+            }
         }
 
         function prevPage() {
@@ -1721,27 +1736,6 @@
                 finally { prefetchInProgress = false; }
             })();
         });
-
-        // تحديث nextPage لاستخدام الكاش إن وجد
-        function nextPage() {
-            if (!lastVisible) return;
-            const nextPageNum = currentPage + 1;
-            if (prefetchCache.has(nextPageNum)) {
-                const cached = prefetchCache.get(nextPageNum);
-                currentPage++;
-                renderTable(cached.docs);
-                pageSnapshots[currentPage] = cached;
-                lastVisible = cached.last;
-                firstVisible = cached.first;
-                updatePagination(cached.docs.length);
-                prefetchCache.delete(nextPageNum);
-                // Prefetch الصفحة التي تليها
-                nextPageBtn.dispatchEvent(new Event('mouseenter'));
-            } else {
-                currentPage++;
-                loadStudents(false);
-            }
-        }
 
         // ===== تحديث الإحصائيات مع تخزين مؤقت (0 قراءات إضافية) =====
         function setupStatsCaching() {

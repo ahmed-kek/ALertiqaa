@@ -7,7 +7,7 @@
     <meta name="description" content="نموذج تسجيل الطلاب الجدد في مدارس الأرتقاء الأهلية للعام الدراسي الحالي">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#084c43">
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="الأرتقاء">
     <link rel="apple-touch-startup-image" href="logo.jpg" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)">
@@ -1122,11 +1122,13 @@
     <div class="admin-login-modal" id="adminLoginModal">
         <div class="modal-content">
             <h3><i class="fas fa-lock"></i> دخول المشرف</h3>
-            <input type="password" id="adminPasswordInput" placeholder="كلمة مرور المشرف" autocomplete="off">
-            <div class="modal-actions">
-                <button class="btn-cancel" onclick="document.getElementById('adminLoginModal').classList.remove('show')">إلغاء</button>
-                <button class="btn-login" id="adminLoginBtn">دخول</button>
-            </div>
+            <form id="adminLoginForm" onsubmit="event.preventDefault(); document.getElementById('adminLoginBtn').click();">
+                <input type="password" id="adminPasswordInput" placeholder="كلمة مرور المشرف" autocomplete="off" required>
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" onclick="document.getElementById('adminLoginModal').classList.remove('show')">إلغاء</button>
+                    <button type="submit" class="btn-login" id="adminLoginBtn">دخول</button>
+                </div>
+            </form>
         </div>
     </div>
 
