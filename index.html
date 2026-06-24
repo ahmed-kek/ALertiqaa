@@ -189,30 +189,6 @@
         }
 
         /* ===== مدخل لوحة التحكم (مخفي) ===== */
-        #adminAccessLink {
-            position: fixed;
-            bottom: 10px;
-            left: 10px;
-            width: 36px;
-            height: 36px;
-            background: rgba(8, 76, 67, 0.1);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            color: var(--primary-dark);
-            font-size: 14px;
-            opacity: 0.5;
-            z-index: 100;
-            transition: all 0.3s ease;
-            text-decoration: none;
-        }
-        #adminAccessLink:hover {
-            opacity: 1;
-            background: rgba(8, 76, 67, 0.2);
-            transform: scale(1.1);
-        }
         .admin-login-modal {
             position: fixed;
             top: 0;
@@ -1210,11 +1186,6 @@
         </div>
     </div>
 
-    <!-- ===== مدخل لوحة التحكم (dblclick أو Ctrl+Shift+A) ===== -->
-    <a id="adminAccessLink" href="#" title="دخول المشرف (Ctrl+Shift+A)" onclick="return false;">
-        <i class="fas fa-shield-alt"></i>
-    </a>
-
     <!-- ===== نافذة دخول المشرف ===== -->
     <div class="admin-login-modal" id="adminLoginModal">
         <div class="modal-content">
@@ -1829,15 +1800,6 @@
                 document.querySelectorAll('.admin-login-modal.show').forEach(m => m.classList.remove('show'));
             }
         });
-
-        // زر دخول المشرف (dblclick)
-        const adminLink = document.getElementById('adminAccessLink');
-        if (adminLink) {
-            adminLink.addEventListener('dblclick', function(e) {
-                e.preventDefault();
-                openAdminPanel();
-            });
-        }
 
         // زر تسجيل الدخول في نافذة المشرف
         const adminLoginBtn = document.getElementById('adminLoginBtn');
