@@ -1179,7 +1179,7 @@
                     const data = d.data();
                     const date = data.deletedAt ? (data.deletedAt.toDate ? data.deletedAt.toDate() : new Date(data.deletedAt)) : new Date();
                     const formatted = date.toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric' });
-                    html += `<tr><td>${i+1}</td><td><strong>${escapeHTML(data.fullName || 'غير معروف')}</strong></td><td><span class="badge-grade">${escapeHTML(data.grade || '-')}</span></td><td>${escapeHTML(data.gender || '-')}</td><td style="font-size:12px;">${formatted}</td><td><div class="action-btns"><button class="btn-restore" data-id="${d.id}" onclick="restoreStudent('${d.id}')"><i class="fas fa-undo"></i> استعادة</button><button class="btn-permanent-delete" data-id="${d.id}" onclick="permanentDeleteStudent('${d.id}')"><i class="fas fa-times"></i> حذف نهائي</button></div></td></tr>`;
+                    html += `<tr><td>${i+1}</td><td><strong>${escapeHTML(data.fullName || 'غير معروف')}</strong></td><td><span class="badge-grade">${escapeHTML(data.grade || '-')}</span></td><td>${escapeHTML(data.gender || '-')}</td><td style="font-size:12px;">${formatted}</td><td><div class="action-btns"><button class="btn-restore" data-sid="${escapeHTML(d.id)}"><i class="fas fa-undo"></i> استعادة</button><button class="btn-permanent-delete" data-sid="${escapeHTML(d.id)}"><i class="fas fa-times"></i> حذف نهائي</button></div></td></tr>`;
                 });
                 tbody.innerHTML = html;
             } catch (e) {
@@ -1254,6 +1254,21 @@
                 loadStudents(true);
             } catch (e) { showToast('❌ فشل الحذف النهائي: ' + e.message, 'error'); }
         };
+
+        // ===== تفويض الأحداث لسلة المحذوفات (بدلاً من onclick المباشر) =====
+        document.getElementById('trashTableBody').addEventListener('click', function(e) {
+            const btn = e.target.closest('button');
+            if (!btn) return;
+            const id = btn.dataset.sid;
+            if (!id) return;
+            if (btn.classList.contains('btn-restore')) {
+                e.preventDefault();
+                window.restoreStudent(id);
+            } else if (btn.classList.contains('btn-permanent-delete')) {
+                e.preventDefault();
+                window.permanentDeleteStudent(id);
+            }
+        });
 
         // ===== دوال التبويب مع إيقاف الـ listeners غير النشطة =====
         function setupTabs() {
@@ -1618,10 +1633,14 @@
                     totalDocs = cachedTotalFromStats || 0;
                 }
 
+                // استخدام آخر مستند من snapshot الأصلي للـ cursor (وليس من docs المفلتر)
+                // لتجنب مشكلة pagination مع الفلترة
+                const lastRaw = snapshot.docs[snapshot.docs.length - 1];
+                const firstRaw = snapshot.docs[0];
                 if (docs.length > 0) {
-                    lastVisible = docs[docs.length - 1];
-                    firstVisible = docs[0];
-                    pageSnapshots[currentPage] = { first: firstVisible, last: lastVisible, docs: docs };
+                    lastVisible = lastRaw;
+                    firstVisible = firstRaw;
+                    pageSnapshots[currentPage] = { first: firstRaw, last: lastRaw, docs: docs };
                 } else {
                     lastVisible = null;
                     firstVisible = null;
@@ -1808,12 +1827,14 @@
             prefetchInProgress = true;
             (async () => {
                 try {
-                    let q = query(collection(db, "students"), where("deleted", "==", false), orderBy("registeredAt", "desc"), limit(PAGE_SIZE));
+                    const prefetchConstraints = buildConstraints();
+                    prefetchConstraints.push(limit(PAGE_SIZE));
                     if (lastVisible && pageSnapshots[currentPage]) {
-                        q = query(q, startAfter(pageSnapshots[currentPage].last));
+                        prefetchConstraints.push(startAfter(pageSnapshots[currentPage].last));
                     } else if (lastVisible) {
-                        q = query(q, startAfter(lastVisible));
+                        prefetchConstraints.push(startAfter(lastVisible));
                     }
+                    let q = query(collection(db, "students"), ...prefetchConstraints);
                     const snapshot = await getDocs(q);
                     if (snapshot.docs.length > 0) {
                         prefetchCache.set(nextPageNum, { docs: snapshot.docs, first: snapshot.docs[0], last: snapshot.docs[snapshot.docs.length - 1] });
@@ -2195,6 +2216,7 @@
             if (!content || !content.innerHTML) { showToast('لا توجد بيانات للطباعة.', 'error'); return; }
             const title = document.querySelector('#detailModal h2')?.textContent || 'تقرير الطالب';
             const printWin = window.open('', '_blank', 'width=800,height=600');
+            if (!printWin) { showToast('⚠️ تم حظر النافذة المنبثقة.', 'error'); return; }
             printWin.document.write(`
                 <html dir="rtl"><head><meta charset="UTF-8">
                 <title>${title}</title>
@@ -2352,7 +2374,8 @@
             // ربط زر واتساب برقم الطالب
             const waBtn = document.getElementById('whatsappContactBtn');
             if (waBtn && student.phone) {
-                const waNum = '964' + student.phone.replace(/^0+/, '');
+                const cleanPhone = student.phone.replace(/^0+/, '');
+                const waNum = cleanPhone.startsWith('964') || cleanPhone.startsWith('+') ? cleanPhone : '964' + cleanPhone;
                 waBtn.onclick = () => {
                     const waText = encodeURIComponent(`السلام عليكم، إدارة مدارس الأرتقاء: بخصوص الطالب (${escapeHTML(student.fullName)}) رقم تسجيل: ${student.registrationId || 'غير محدد'}.`);
                     window.open(`https://wa.me/${waNum}?text=${waText}`, '_blank');
@@ -2362,24 +2385,15 @@
                 waBtn.style.display = 'none';
             }
 
-            // ربط قوالب واتساب
+            // قوالب واتساب مع تفويض الأحداث
             const waTemplates = {
                 welcome: `السلام عليكم ورحمة الله وبركاته\n\nعائلة الطالب (${escapeHTML(student.fullName)}) المحترمة،\n\nنشكركم على تسجيلكم في مدارس الأرتقاء الأهلية للعام الدراسي ${escapeHTML(student.academicYear || 'الحالي')}. رقم تسجيلكم: ${student.registrationId || 'غير محدد'}.\nسيتم التواصل معكم قريباً لتأكيد القبول.\n\nمع فائق الاحترام،\nإدارة مدارس الأرتقاء الأهلية`,
                 followup: `السلام عليكم\n\nإدارة مدارس الأرتقاء تتابع طلب تسجيل الطالب (${escapeHTML(student.fullName)}) رقم: ${student.registrationId || 'غير محدد'}.\n\nنأمل منكم تأكيد رغبتكم بالالتحاق أو الاستفسار عن أي معلومات إضافية.\n\nشاكرين تعاونكم.`,
                 approved: `السلام عليكم ورحمة الله وبركاته\n\nعائلة الطالب (${escapeHTML(student.fullName)}) المحترمة،\n\nيسرنا إعلامكم بقبول طلب تسجيل ${escapeHTML(student.gender === 'أنثى' ? 'الطالبة' : 'الطالب')} (${escapeHTML(student.fullName)}) في مدارس الأرتقاء الأهلية للعام الدراسي ${escapeHTML(student.academicYear || 'الحالي')}.\n\nيرجى مراجعة الإدارة لاستكمال إجراءات التسجيل.\n\nمع فائق الاحترام،\nإدارة مدارس الأرتقاء الأهلية`
             };
-            document.querySelectorAll('.wa-template-btn').forEach(btn => {
-                btn.onclick = (e) => {
-                    e.stopPropagation();
-                    const template = waTemplates[btn.dataset.template];
-                    if (template && student.phone) {
-                        const waNum = '964' + student.phone.replace(/^0+/, '');
-                        window.open(`https://wa.me/${waNum}?text=${encodeURIComponent(template)}`, '_blank');
-                    } else if (!student.phone) {
-                        showToast('⚠️ لا يوجد رقم جوال للطالب', 'warning');
-                    }
-                };
-            });
+            // تخزين القوالب في الـ modal لاستخدامها عبر تفويض الأحداث
+            document.getElementById('detailModal').dataset.waPhone = student.phone || '';
+            document.getElementById('detailModal')._waTemplates = waTemplates;
 
             document.getElementById('detailModal').classList.add('show');
         }
@@ -2397,6 +2411,22 @@
 
         // ===== إضافة ملاحظة تواصل (استماع على الـ modal) =====
         document.getElementById('detailModal').addEventListener('click', async function(e) {
+            // ===== قوالب واتساب (تفويض) =====
+            const waBtn = e.target.closest('.wa-template-btn');
+            if (waBtn) {
+                e.stopPropagation();
+                const template = this._waTemplates?.[waBtn.dataset.template];
+                const phone = this.dataset.waPhone;
+                if (template && phone) {
+                    const cleanPhone = phone.replace(/^0+/, '');
+                    const waNum = cleanPhone.startsWith('964') || cleanPhone.startsWith('+') ? cleanPhone : '964' + cleanPhone;
+                    window.open(`https://wa.me/${waNum}?text=${encodeURIComponent(template)}`, '_blank');
+                } else if (!phone) {
+                    showToast('⚠️ لا يوجد رقم جوال للطالب', 'warning');
+                }
+                return;
+            }
+            // ===== إضافة ملاحظة اتصال =====
             const btn = e.target.closest('.add-contact-btn');
             if (!btn) return;
             const studentId = btn.dataset.studentId;
@@ -2859,6 +2889,7 @@
                 allDocs.forEach(d => { const s = d.data().status || 'جديد'; statuses[s] = (statuses[s] || 0) + 1; });
 
                 const printWin = window.open('', '_blank', 'width=900,height=700');
+                if (!printWin) { showToast('⚠️ تم حظر النافذة المنبثقة.', 'error'); return; }
                 printWin.document.write(`
                     <html dir="rtl"><head><meta charset="UTF-8">
                     <title>التقرير السنوي - مدارس الأرتقاء</title>
@@ -2878,7 +2909,7 @@
                         .footer-text { text-align: center; color: #a0aec0; font-size: 12px; margin-top: 40px; padding-top: 15px; border-top: 1px solid #e2e8f0; }
                         @media print { body { padding: 20px; } }
                     </style></head><body>
-                    <div class="header"><h1>مدارس الأرتقاء الأهلية</h1><small>التقرير السنوي - العام الدراسي ${activeAcademicYear || '2026-2027'}</small></div>
+                    <div class="header"><h1>مدارس الأرتقاء الأهلية</h1><small>التقرير السنوي - العام الدراسي 2026-2027</small></div>
                     <div class="stats-row">
                         <div class="stat-box"><div class="num">${allDocs.length}</div><div class="label">إجمالي الطلاب</div></div>
                         <div class="stat-box"><div class="num">${males}</div><div class="label">الذكور</div></div>
@@ -3034,12 +3065,13 @@
                 allDocs.forEach(doc => {
                     const data = doc.data();
                     const row = document.createElement('tr');
+                    const regDate = data.registeredAt ? data.registeredAt.toDate ? data.registeredAt.toDate() : new Date(data.registeredAt) : null;
                     row.innerHTML = `
-                        <td style="padding: 8px; border: 1px solid #ddd;">${data.fullName}</td>
-                        <td style="padding: 8px; border: 1px solid #ddd;">${data.phone}</td>
-                        <td style="padding: 8px; border: 1px solid #ddd;">${data.grade || 'غير محدد'}</td>
-                        <td style="padding: 8px; border: 1px solid #ddd;">${data.status || 'جديد'}</td>
-                        <td style="padding: 8px; border: 1px solid #ddd;">${new Date(data.registeredAt?.toDate()).toLocaleDateString('ar-EG')}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${escapeHTML(data.fullName || '')}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${escapeHTML(data.phone || '')}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${escapeHTML(data.grade || 'غير محدد')}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${escapeHTML(data.status || 'جديد')}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${regDate ? regDate.toLocaleDateString('ar-EG') : '-'}</td>
                     `;
                     tbody.appendChild(row);
                 });
@@ -3203,11 +3235,11 @@
                 };
 
                 // دالة الإخفاء
-                function hideCommandPalette() {
+                window.hideCommandPalette = function() {
                     if (document.querySelector('.command-palette')) {
                         document.querySelector('.command-palette').style.display = 'none';
                     }
-                }
+                };
             }
         }
 
@@ -3220,8 +3252,8 @@
                     if (document.querySelector('.command-palette')) {
                         if (document.querySelector('.command-palette').style.display === 'none') {
                             window.showCommandPalette();
-                        } else {
-                            hideCommandPalette();
+                        } else if (window.hideCommandPalette) {
+                            window.hideCommandPalette();
                         }
                     }
                 }
@@ -3229,7 +3261,7 @@
                 // Ctrl/Cmd + N لإضافة طالب جديد
                 if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
                     e.preventDefault();
-                    goToAddStudent();
+                    window.location.href = 'index.html';
                 }
 
                 // Ctrl/Cmd + E لتصدير Excel
@@ -3252,13 +3284,11 @@
         function executeCommand(cmdId) {
             switch(cmdId) {
                 case 'students-list':
-                    // الانتقال إلى قائمة الطلاب
-                    if (document.getElementById('students-tab')) {
-                        document.getElementById('students-tab').click();
-                    }
+                    document.querySelector('.tab-btn[data-tab="tabHome"]')?.click();
+                    document.querySelector('.table-wrapper')?.scrollIntoView({ behavior: 'smooth' });
                     break;
                 case 'add-student':
-                    goToAddStudent();
+                    window.location.href = 'index.html';
                     break;
                 case 'export-excel':
                     exportFormat.value = 'excel';
@@ -3271,9 +3301,8 @@
                     exportBtn.click();
                     break;
                 case 'reports':
-                    if (document.getElementById('reports-tab')) {
-                        document.getElementById('reports-tab').click();
-                    }
+                    document.querySelector('.stats-grid')?.scrollIntoView({ behavior: 'smooth' });
+                    showToast('📊 الإحصائيات محدثة آنياً', 'info');
                     break;
                 case 'backup':
                     exportFormat.value = 'json';
@@ -3281,13 +3310,6 @@
                     exportBtn.click();
                     break;
             }
-        }
-
-        // ===== دالة الانتقال إلى إضافة طالب =====
-        function goToAddStudent() {
-            // تنفيذ المنطق اللازم لفتح نافذة إضافة طالب جديدة
-            showToast('إفتح نموذج إضافة طالب جديد', 'info');
-            // يمكن تنفيذ פעולה فتح النموذج الفعلي هنا
         }
 
         // ===== نظام الإشعارات الفورية للتسجيلات الجديدة =====
