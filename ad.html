@@ -1512,7 +1512,6 @@
             if (year) constraints.push(where("academicYear", "==", year));
             if (grade) constraints.push(where("grade", "==", grade));
             if (gender) constraints.push(where("gender", "==", gender));
-            if (status) constraints.push(where("status", "==", status));
 
             if (!isLocalSearch) {
                 constraints.push(orderBy("registeredAt", "desc"));
