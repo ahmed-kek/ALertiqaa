@@ -1051,7 +1051,7 @@
                             <label for="dob"><i class="fas fa-calendar-alt"></i> تاريخ الميلاد <span class="required">*</span></label>
                             <input type="date" id="dob" autocomplete="bday" required aria-required="true">
                             <span class="valid-icon"><i class="fas fa-check-circle"></i></span>
-                            <div class="field-error" id="dobError"><i class="fas fa-exclamation-circle"></i> تاريخ غير صحيح (يجب أن يكون بين 1 و 18 سنة)</div>
+                            <div class="field-error" id="dobError"><i class="fas fa-exclamation-circle"></i> تاريخ غير صحيح (يجب أن يكون العمر بين 5 و 25 سنة)</div>
                         </div>
                     </div>
                     <div class="form-row">
@@ -1101,7 +1101,7 @@
                             <label for="phone"><i class="fas fa-phone-alt"></i> رقم الجوال <span class="required">*</span></label>
                             <input type="tel" id="phone" autocomplete="tel" placeholder="مثال: 07850009133" required aria-required="true">
                             <span class="valid-icon"><i class="fas fa-check-circle"></i></span>
-                            <div class="field-error" id="phoneError"><i class="fas fa-exclamation-circle"></i> أدخل رقم جوال عراقي صحيح (11 رقم، يبدأ بـ 07)</div>
+                            <div class="field-error" id="phoneError"><i class="fas fa-exclamation-circle"></i> أدخل رقم جوال صحيح (مثال: 07850009133 أو 0551234567)</div>
                         </div>
                         <div class="form-group">
                             <label for="address"><i class="fas fa-home"></i> العنوان (المنزل) <span class="required">*</span></label>
@@ -1190,11 +1190,11 @@
     <div class="admin-login-modal" id="adminLoginModal">
         <div class="modal-content">
             <h3><i class="fas fa-lock"></i> دخول المشرف</h3>
-            <form id="adminLoginForm" onsubmit="event.preventDefault(); document.getElementById('adminLoginBtn').click();">
+            <form id="adminLoginForm">
                 <input type="password" id="adminPasswordInput" placeholder="كلمة مرور المشرف" autocomplete="off" required>
                 <div class="modal-actions">
                     <button type="button" class="btn-cancel" onclick="document.getElementById('adminLoginModal').classList.remove('show')">إلغاء</button>
-                    <button type="submit" class="btn-login" id="adminLoginBtn">دخول</button>
+                    <button type="button" class="btn-login" id="adminLoginBtn">دخول</button>
                 </div>
             </form>
         </div>
@@ -1347,11 +1347,11 @@
                     } else if (id === 'dob') {
                         const date = new Date(val);
                         const now = new Date();
-                        const minAge = new Date(now);
-                        minAge.setFullYear(minAge.getFullYear() - 25);
-                        const maxAge = new Date(now);
-                        maxAge.setFullYear(maxAge.getFullYear() - 5);
-                        isValid = !isNaN(date) && date <= now && date <= minAge && date >= maxAge;
+                        const oldest = new Date(now);
+                        oldest.setFullYear(oldest.getFullYear() - 25);
+                        const youngest = new Date(now);
+                        youngest.setFullYear(youngest.getFullYear() - 5);
+                        isValid = !isNaN(date) && date <= youngest && date >= oldest;
                     } else if (id === 'gender' || id === 'grade') {
                         isValid = val !== '';
                     } else {
@@ -1396,11 +1396,11 @@
                         } else if (id === 'dob') {
                             const date = new Date(val);
                             const now = new Date();
-                            const minAge = new Date(now);
-                            minAge.setFullYear(minAge.getFullYear() - 25);
-                            const maxAge = new Date(now);
-                            maxAge.setFullYear(maxAge.getFullYear() - 5);
-                            isValid = !isNaN(date) && date <= now && date <= minAge && date >= maxAge;
+                            const oldest = new Date(now);
+                            oldest.setFullYear(oldest.getFullYear() - 25);
+                            const youngest = new Date(now);
+                            youngest.setFullYear(youngest.getFullYear() - 5);
+                            isValid = !isNaN(date) && date <= youngest && date >= oldest;
                         } else if (id === 'gender' || id === 'grade') {
                             isValid = val !== '';
                         } else {
@@ -1455,7 +1455,7 @@
         });
         restoreDraft();
 
-        // ===== تاريخ الميلاد (مدقق: 1–18 سنة بالضبط) =====
+        // ===== تاريخ الميلاد (مدقق: 5–25 سنة) =====
         function setupDateRange() {
             const dobInput = document.getElementById('dob');
             if (dobInput) {
@@ -1463,11 +1463,14 @@
                 const y = today.getFullYear();
                 const m = String(today.getMonth() + 1).padStart(2, '0');
                 const d = String(today.getDate()).padStart(2, '0');
-                dobInput.max = `${y}-${m}-${d}`;
-                // الحد الأدنى: 18 سنة بالضبط
-                const minDate = new Date(today);
-                minDate.setFullYear(minDate.getFullYear() - 18);
-                dobInput.min = minDate.toISOString().split('T')[0];
+                // الحد الأعلى: 5 سنوات (أصغر طالب)
+                const youngest = new Date(today);
+                youngest.setFullYear(youngest.getFullYear() - 5);
+                dobInput.max = youngest.toISOString().split('T')[0];
+                // الحد الأدنى: 25 سنة (أكبر طالب)
+                const oldest = new Date(today);
+                oldest.setFullYear(oldest.getFullYear() - 25);
+                dobInput.min = oldest.toISOString().split('T')[0];
             }
         }
         setupDateRange();
@@ -1833,16 +1836,7 @@
         const adminLoginBtn = document.getElementById('adminLoginBtn');
         if (adminLoginBtn) {
             adminLoginBtn.addEventListener('click', function() {
-                const password = document.getElementById('adminPasswordInput').value;
-                // كلمة المرور الافتراضية (يمكن تغييرها من لوحة التحكم)
-                if (password === 'admin2026' || password === 'irtiqaa2026') {
-                    document.getElementById('adminLoginModal').classList.remove('show');
-                    window.location.href = 'ad.html';
-                } else {
-                    showToast('❌ كلمة المرور غير صحيحة.', 'error');
-                    document.getElementById('adminPasswordInput').value = '';
-                    document.getElementById('adminPasswordInput').focus();
-                }
+                showToast('🔒 لوحة التحكم محمية بالدخول عبر Firebase. استخدم حساب المشرف المسجل.', 'info');
             });
         }
 
