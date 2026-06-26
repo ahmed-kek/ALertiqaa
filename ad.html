@@ -18,7 +18,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/7.0.0/fuse.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -850,15 +849,6 @@
                     <div class="stat-card today"><div class="stat-info"><h3><i class="fas fa-calendar-day" style="color:#4299e1;margin-left:6px;"></i> مسجل اليوم</h3><p id="todayCount">0</p></div><div class="stat-icon"><i class="fas fa-calendar-check"></i></div></div>
                 </div>
 
-                <div style="background:#fff;border-radius:20px;padding:20px 25px;margin-bottom:25px;box-shadow:0 4px 15px rgba(0,0,0,0.04);">
-                    <div style="display:flex;align-items:center;gap:12px;margin-bottom:15px;">
-                        <i class="fas fa-chart-bar" style="color:#b08f4a;font-size:20px;"></i>
-                        <span style="font-weight:700;color:#063a33;font-size:16px;">توزيع الصفوف الدراسية</span>
-                        <span style="font-size:12px;color:#a0aec0;font-weight:600;"><i class="fas fa-sync-alt"></i> محدث آنياً</span>
-                    </div>
-                    <div id="gradeChart" style="height:250px;"><canvas id="gradeCanvas"></canvas></div>
-                </div>
-
                 <div class="control-section">
                     <div class="label"><i class="fas fa-toggle-on"></i> حالة بوابة التسجيل</div>
                     <div class="switch-container">
@@ -1275,7 +1265,6 @@
                             male: increment(gender === 'ذكر' ? 1 : 0),
                             female: increment(gender === 'أنثى' ? 1 : 0),
                             deletedCount: increment(-1),
-                            [`gradeDistribution.${grade.replace(/\s+/g, '_')}`]: increment(1)
                         });
                     }
                 });
@@ -1305,14 +1294,11 @@
                         const s = await tx.get(statsRef);
                         if (s.exists()) {
                             const sd = s.data();
-                            const gradeKey = (data.grade || 'غير_محدد').replace(/\s+/g, '_');
-                            const gd = sd.gradeDistribution || {};
                             tx.update(statsRef, {
                                 total: increment(-1),
                                 male: increment(data.gender === 'ذكر' ? -1 : 0),
                                 female: increment(data.gender === 'أنثى' ? -1 : 0),
-                                deletedCount: increment(-1),
-                                [`gradeDistribution.${gradeKey}`]: increment(-1)
+                                deletedCount: increment(-1)
                             });
                         }
                     });
@@ -1460,10 +1446,9 @@
                 } else {
                     await setDoc(statsRef, {
                         total: 0, male: 0, female: 0, todayCount: 0,
-                        lastReset: new Date().toISOString().split('T')[0],
-                        gradeDistribution: {}
+                        lastReset: new Date().toISOString().split('T')[0]
                     });
-                    applyStatsToUI({ total: 0, male: 0, female: 0, todayCount: 0, gradeDistribution: {} });
+                    applyStatsToUI({ total: 0, male: 0, female: 0, todayCount: 0 });
                 }
             } catch (e) { console.warn("⚠️ فشل جلب الإحصائيات:", e); }
         }
@@ -1479,7 +1464,6 @@
             femaleCount.textContent = d.female ?? 0; femaleCount.classList.remove('count-animate'); void femaleCount.offsetWidth; femaleCount.classList.add('count-animate');
             todayCount.textContent = d.todayCount ?? 0; todayCount.classList.remove('count-animate'); void todayCount.offsetWidth; todayCount.classList.add('count-animate');
             cachedTotalFromStats = d.total ?? 0;
-            renderGradeChart(d.gradeDistribution || {});
             const badge = document.getElementById('trashBadge');
             const dc = d.deletedCount || 0;
             if (badge) {
@@ -1654,13 +1638,11 @@
                         const s = await tx.get(statsRef);
                         if (s.exists()) {
                             const d = s.data();
-                            const gk = grade.replace(/\s+/g, '_');
-                            const gd = d.gradeDistribution || {};
                             tx.update(statsRef, {
                                 total: increment(1), male: increment(gender === 'ذكر' ? 1 : 0),
                                 female: increment(gender === 'أنثى' ? 1 : 0),
                                 todayCount: d.lastReset === today ? increment(1) : 1,
-                                lastReset: today, [`gradeDistribution.${gk}`]: increment(1),
+                                lastReset: today,
                                 lastRegisteredName: name, lastRegisteredTimestamp: serverTimestamp()
                             });
                         }
@@ -2045,41 +2027,6 @@
             statsRefreshInterval = setInterval(refreshStatsFromFirestore, 120000);
         }
 
-        // ===== رسم بياني لتوزيع الصفوف (Chart.js) =====
-        let gradeChartInstance = null;
-        function renderGradeChart(distribution) {
-            const canvas = document.getElementById('gradeCanvas');
-            if (!canvas) return;
-            const ctx = canvas.getContext('2d');
-            const keys = Object.keys(distribution);
-            if (keys.length === 0) {
-                if (gradeChartInstance) { gradeChartInstance.destroy(); gradeChartInstance = null; }
-                return;
-            }
-            const labels = keys.map(k => k.replace(/_/g, ' '));
-            const values = keys.map(k => distribution[k] || 0);
-            const colors = ['#063a33','#0d6b5c','#2d9d6e','#b08f4a','#2563eb','#3b82f6','#6366f1','#8b5cf6','#d946ef','#dc3545'];
-            if (gradeChartInstance) {
-                gradeChartInstance.data.labels = labels;
-                gradeChartInstance.data.datasets[0].data = values;
-                gradeChartInstance.data.datasets[0].backgroundColor = colors.slice(0, values.length);
-                gradeChartInstance.update();
-            } else {
-                gradeChartInstance = new Chart(ctx, {
-                    type: 'bar',
-                    data: { labels, datasets: [{ label: 'عدد الطلاب', data: values, backgroundColor: colors.slice(0, values.length), borderRadius: 6, borderSkipped: false }] },
-                    options: {
-                        responsive: true, maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
-                        scales: {
-                            y: { beginAtZero: true, ticks: { stepSize: 1, font: { family: 'Cairo' } } },
-                            x: { ticks: { font: { family: 'Cairo', size: 11 } } }
-                        }
-                    }
-                });
-            }
-        }
-
         // ===== Debounce للبحث المحلي (0 قراءة من Firestore) =====
         function setupSearchDebounce() {
             searchInput.addEventListener('input', () => {
@@ -2176,7 +2123,6 @@
 
                 await setDoc(statsRef, { total, male, female, todayCount, lastReset: new Date().toISOString().split('T')[0], lastUpdated: serverTimestamp() }, { merge: true });
                 _statsRecalculated = true;
-                // نقرأ البيانات المحدثة (بما فيها gradeDistribution من التسجيلات السابقة)
                 const updatedSnap = await getDoc(statsRef);
                 if (updatedSnap.exists()) applyStatsToUI(updatedSnap.data());
             } catch (e) { console.warn("⚠️ فشل التصحيح الأولي للإحصائيات:", e); }
@@ -2348,8 +2294,7 @@
                                     total: increment(-1),
                                     male: increment(gender === 'ذكر' ? -1 : 0),
                                     female: increment(gender === 'أنثى' ? -1 : 0),
-                                    deletedCount: increment(1),
-                                    [`gradeDistribution.${grade.replace(/\s+/g, '_')}`]: increment(-1)
+                                    deletedCount: increment(1)
                                 });
                             }
                         });
@@ -2363,8 +2308,7 @@
                                             total: increment(1),
                                             male: increment(gender === 'ذكر' ? 1 : 0),
                                             female: increment(gender === 'أنثى' ? 1 : 0),
-                                            deletedCount: increment(-1),
-                                            [`gradeDistribution.${grade.replace(/\s+/g, '_')}`]: increment(1)
+                                            deletedCount: increment(-1)
                                         });
                                     }
                                 });
@@ -2828,14 +2772,11 @@
                 // اقرأ بيانات الطلاب لحساب العداد
                 const docSnaps = await Promise.all(ids.map(id => getDoc(doc(db, "students", id))));
                 let maleCount2 = 0, femaleCount2 = 0;
-                const gradeDelta = {};
                 docSnaps.forEach(snap => {
                     if (snap.exists()) {
                         const d = snap.data();
                         if (d.gender === 'ذكر') maleCount2++;
                         else if (d.gender === 'أنثى') femaleCount2++;
-                        const gk = (d.grade || 'غير_محدد').replace(/\s+/g, '_');
-                        gradeDelta[gk] = (gradeDelta[gk] || 0) + 1;
                     }
                 });
 
@@ -2847,7 +2788,6 @@
                 const s = await getDoc(statsRef);
                 if (s.exists()) {
                     const updates = { total: increment(-ids.length), deletedCount: increment(ids.length), male: increment(-maleCount2), female: increment(-femaleCount2) };
-                    Object.keys(gradeDelta).forEach(gk => updates[`gradeDistribution.${gk}`] = increment(-gradeDelta[gk]));
                     batch.update(statsRef, updates);
                 }
                 await batch.commit();
@@ -2858,14 +2798,11 @@
                     try {
                         const undoSnaps = await Promise.all(Array.from(deletedIds).map(id => getDoc(doc(db, "students", id))));
                         let umale = 0, ufemale = 0;
-                        const ugradeDelta = {};
                         undoSnaps.forEach(snap => {
                             if (snap.exists()) {
                                 const d = snap.data();
                                 if (d.gender === 'ذكر') umale++;
                                 else if (d.gender === 'أنثى') ufemale++;
-                                const gk = (d.grade || 'غير_محدد').replace(/\s+/g, '_');
-                                ugradeDelta[gk] = (ugradeDelta[gk] || 0) + 1;
                             }
                         });
                         const undoBatch = writeBatch(db);
@@ -2875,7 +2812,6 @@
                         const s2 = await getDoc(statsRef);
                         if (s2.exists()) {
                             const uupdates = { total: increment(ids.length), deletedCount: increment(-ids.length), male: increment(umale), female: increment(ufemale) };
-                            Object.keys(ugradeDelta).forEach(gk => uupdates[`gradeDistribution.${gk}`] = increment(ugradeDelta[gk]));
                             undoBatch.update(statsRef, uupdates);
                         }
                         await undoBatch.commit();
@@ -3167,7 +3103,7 @@
             }
         }, 1000);
 
-        console.log("🚀 لوحة التحكم المتطورة (كاش + Fuse.js + Chart.js + Excel + تقارير) جاهزة!");
+        console.log("🚀 لوحة التحكم المتطورة (كاش + Fuse.js + Excel + تقارير) جاهزة!");
 
         // ===== تسجيل Service Worker لتطبيق PWA =====
         if ('serviceWorker' in navigator) {
