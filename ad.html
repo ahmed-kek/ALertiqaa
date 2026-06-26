@@ -175,6 +175,8 @@
         .btn-logout:hover { background: var(--danger-dark); }
         .btn-export-all { background: #2b6cb0; color: #fff; }
         .btn-export-all:hover { background: var(--info-dark); }
+        .btn-add-student { background: var(--accent, #b08f4a); color: #fff; }
+        .btn-add-student:hover { background: var(--accent-dark, #8a6f3a); }
         .btn-export-page { background: var(--success); color: #fff; }
         .btn-export-page:hover { background: var(--success-dark); }
         .btn-refresh { background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.2) !important; }
@@ -819,6 +821,7 @@
                         </select>
                         <button class="btn-export-all" id="exportBtn"><i class="fas fa-download"></i> تصدير</button>
                     </div>
+                    <button class="btn-add-student" id="addStudentBtn"><i class="fas fa-user-plus"></i> إضافة طالب</button>
                     <button class="btn-dark-toggle" id="darkModeToggle"><i class="fas fa-moon"></i></button>
                     <button class="btn-logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> خروج</button>
                 </div>
@@ -998,6 +1001,65 @@
             </div>
         </div>
 
+        <div class="modal-overlay" id="addStudentModal">
+            <div class="modal-box" style="max-width:700px;">
+                <button class="close-modal" data-close="addStudentModal"><i class="fas fa-times"></i></button>
+                <h2><i class="fas fa-user-plus" style="color:#b08f4a;"></i> إضافة طالب جديد</h2>
+                <div id="addContent">
+                    <div class="form-row" style="display:flex;flex-wrap:wrap;gap:15px;">
+                        <div class="form-group" style="flex:1 1 calc(50% - 15px);min-width:180px;">
+                            <label style="display:block;font-weight:600;font-size:14px;color:var(--text-primary);margin-bottom:5px;">الاسم الكامل</label>
+                            <input type="text" id="addFullName" style="width:100%;padding:12px 16px;border:2px solid var(--border);border-radius:12px;font-size:15px;font-family:var(--font);background:var(--bg);color:var(--text-primary);">
+                        </div>
+                        <div class="form-group" style="flex:1 1 calc(50% - 15px);min-width:180px;">
+                            <label style="display:block;font-weight:600;font-size:14px;color:var(--text-primary);margin-bottom:5px;">تاريخ الميلاد</label>
+                            <input type="date" id="addDob" style="width:100%;padding:12px 16px;border:2px solid var(--border);border-radius:12px;font-size:15px;font-family:var(--font);background:var(--bg);color:var(--text-primary);">
+                        </div>
+                        <div class="form-group" style="flex:1 1 calc(50% - 15px);min-width:180px;">
+                            <label style="display:block;font-weight:600;font-size:14px;color:var(--text-primary);margin-bottom:5px;">الجنس</label>
+                            <select id="addGender" style="width:100%;padding:12px 16px;border:2px solid var(--border);border-radius:12px;font-size:15px;font-family:var(--font);background:var(--bg);color:var(--text-primary);">
+                                <option value="ذكر">ذكر</option>
+                                <option value="أنثى">أنثى</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex:1 1 calc(50% - 15px);min-width:180px;">
+                            <label style="display:block;font-weight:600;font-size:14px;color:var(--text-primary);margin-bottom:5px;">الصف الدراسي</label>
+                            <select id="addGrade" style="width:100%;padding:12px 16px;border:2px solid var(--border);border-radius:12px;font-size:15px;font-family:var(--font);background:var(--bg);color:var(--text-primary);">
+                                <option>الأول ابتدائي</option><option>الثاني ابتدائي</option>
+                                <option>الثالث ابتدائي</option><option>الرابع ابتدائي</option>
+                                <option>الخامس ابتدائي</option><option>السادس ابتدائي</option>
+                                <option>الأول متوسط</option><option>الثاني متوسط</option><option>الثالث متوسط</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex:1 1 calc(50% - 15px);min-width:180px;">
+                            <label style="display:block;font-weight:600;font-size:14px;color:var(--text-primary);margin-bottom:5px;">ولي الأمر</label>
+                            <input type="text" id="addParentName" style="width:100%;padding:12px 16px;border:2px solid var(--border);border-radius:12px;font-size:15px;font-family:var(--font);background:var(--bg);color:var(--text-primary);">
+                        </div>
+                        <div class="form-group" style="flex:1 1 calc(50% - 15px);min-width:180px;">
+                            <label style="display:block;font-weight:600;font-size:14px;color:var(--text-primary);margin-bottom:5px;">جهة العمل</label>
+                            <input type="text" id="addParentJob" style="width:100%;padding:12px 16px;border:2px solid var(--border);border-radius:12px;font-size:15px;font-family:var(--font);background:var(--bg);color:var(--text-primary);">
+                        </div>
+                        <div class="form-group" style="flex:1 1 calc(50% - 15px);min-width:180px;">
+                            <label style="display:block;font-weight:600;font-size:14px;color:var(--text-primary);margin-bottom:5px;">رقم الجوال</label>
+                            <input type="tel" id="addPhone" style="width:100%;padding:12px 16px;border:2px solid var(--border);border-radius:12px;font-size:15px;font-family:var(--font);background:var(--bg);color:var(--text-primary);">
+                        </div>
+                        <div class="form-group" style="flex:1 1 calc(50% - 15px);min-width:180px;">
+                            <label style="display:block;font-weight:600;font-size:14px;color:var(--text-primary);margin-bottom:5px;">العنوان</label>
+                            <input type="text" id="addAddress" style="width:100%;padding:12px 16px;border:2px solid var(--border);border-radius:12px;font-size:15px;font-family:var(--font);background:var(--bg);color:var(--text-primary);">
+                        </div>
+                        <div class="form-group" style="flex:1 1 100%;">
+                            <label style="display:block;font-weight:600;font-size:14px;color:var(--text-primary);margin-bottom:5px;">الملاحظات</label>
+                            <textarea id="addNotes" style="width:100%;padding:12px 16px;border:2px solid var(--border);border-radius:12px;font-size:15px;font-family:var(--font);background:var(--bg);color:var(--text-primary);min-height:60px;"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div style="display:flex;gap:12px;margin-top:20px;flex-wrap:wrap;">
+                    <button id="saveAddBtn" style="padding:12px 35px;background:#2d9d6e;color:#fff;border:none;border-radius:14px;font-weight:700;font-family:var(--font);cursor:pointer;font-size:16px;"><i class="fas fa-save"></i> حفظ الطالب</button>
+                    <button class="btn-cancel" data-close="addStudentModal" style="padding:12px 35px;"><i class="fas fa-times"></i> إلغاء</button>
+                </div>
+            </div>
+        </div>
+
         <div class="modal-overlay" id="bulkStatusModal">
             <div class="modal-box" style="max-width:400px;text-align:center;">
                 <button class="close-modal" data-close="bulkStatusModal"><i class="fas fa-times"></i></button>
@@ -1030,7 +1092,7 @@
 
     <script type="module">
         import { initializeApp } from "firebase/app";
-        import { initializeFirestore, doc, setDoc, getDoc, deleteDoc, where, collection, query, orderBy, limit, startAfter, getDocs, persistentLocalCache, writeBatch, increment, updateDoc, runTransaction, Timestamp, serverTimestamp, getCountFromServer } from "firebase/firestore";
+        import { initializeFirestore, doc, setDoc, getDoc, deleteDoc, where, collection, query, orderBy, limit, startAfter, getDocs, persistentLocalCache, writeBatch, increment, updateDoc, runTransaction, Timestamp, serverTimestamp, getCountFromServer, addDoc, arrayUnion } from "firebase/firestore";
 
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "firebase/auth";
         // import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
@@ -1048,6 +1110,8 @@
         const auth = getAuth(app);
         const db = initializeFirestore(app, { localCache: persistentLocalCache() });
         const statsRef = doc(db, "config", "stats");
+        const counterRef = doc(db, "config", "registrationCounter");
+        let activeAcademicYear = "2026-2027";
 
         /* const appCheck = initializeAppCheck(app, {
             provider: new ReCaptchaV3Provider('6LfRPCwtAAAAADOCiJh0X4UZKsCSG12LlffJoy38'),
@@ -1513,6 +1577,110 @@
         });
 
         document.getElementById('loginForm').addEventListener('submit', (e) => { e.preventDefault(); login(); });
+
+        // ===== إضافة طالب جديد من لوحة التحكم =====
+        document.getElementById('addStudentBtn').addEventListener('click', async function() {
+            if (!await checkAdminPermission()) return;
+            document.getElementById('addStudentModal').classList.add('show');
+        });
+        document.getElementById('saveAddBtn').addEventListener('click', saveAddStudent);
+
+        function calcAge(dob) {
+            if (!dob) return 0;
+            const birth = new Date(dob);
+            const today = new Date();
+            let age = today.getFullYear() - birth.getFullYear();
+            const m = today.getMonth() - birth.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+            return age;
+        }
+
+        async function saveAddStudent() {
+            if (!await checkAdminPermission()) return;
+            const btn = document.getElementById('saveAddBtn');
+            const name = document.getElementById('addFullName').value.trim();
+            const dob = document.getElementById('addDob').value;
+            const gender = document.getElementById('addGender').value;
+            const grade = document.getElementById('addGrade').value;
+            const parentName = document.getElementById('addParentName').value.trim();
+            const parentJob = document.getElementById('addParentJob').value.trim() || 'غير مذكور';
+            const phone = document.getElementById('addPhone').value.trim().replace(/[\s\-\(\)\+]/g, '');
+            const address = document.getElementById('addAddress').value.trim() || 'غير مذكور';
+            const notes = document.getElementById('addNotes').value.trim() || 'لا يوجد';
+
+            if (!name || name.length < 3) { showToast('❌ الاسم يجب أن يكون 3 أحرف على الأقل.', 'error'); return; }
+            if (!parentName || parentName.length < 3) { showToast('❌ اسم ولي الأمر يجب أن يكون 3 أحرف على الأقل.', 'error'); return; }
+            if (!phone) { showToast('❌ رقم الجوال مطلوب.', 'error'); return; }
+
+            btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
+            try {
+                let regId = '';
+                try {
+                    regId = await runTransaction(db, async (tx) => {
+                        const snap = await tx.get(counterRef);
+                        const num = (snap.data()?.currentNumber || 0) + 1;
+                        tx.set(counterRef, { currentNumber: num }, { merge: true });
+                        return `ERT-${(activeAcademicYear || '2026-2027').split('-')[0]}-${String(num).padStart(4, '0')}`;
+                    });
+                } catch (e) { regId = `ERT-MANUAL-${Date.now()}`; }
+
+                const age = calcAge(dob);
+                const now = serverTimestamp();
+                const docRef = await addDoc(collection(db, "students"), {
+                    name, fullName: name, age,
+                    searchName: name.replace(/[أإآا]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي'),
+                    registrationId: regId, status: 'جديد',
+                    dob, gender, grade, academicYear: activeAcademicYear || '2026-2027',
+                    parentName, parentJob, phone, address, notes,
+                    deleted: false,
+                    registeredAt: now, modifiedAt: now
+                });
+
+                // تسجيل الهاتف
+                try {
+                    const phoneRegRef = doc(db, "config", "phoneRegistry", phone);
+                    const regSnap = await getDoc(phoneRegRef);
+                    if (regSnap.exists()) {
+                        await updateDoc(phoneRegRef, { names: arrayUnion(name), count: increment(1) });
+                    } else {
+                        await setDoc(phoneRegRef, { names: [name], count: 1 });
+                    }
+                } catch (e) {}
+
+                // تحديث العداد
+                try {
+                    const today = new Date().toISOString().split('T')[0];
+                    await runTransaction(db, async (tx) => {
+                        const s = await tx.get(statsRef);
+                        if (s.exists()) {
+                            const d = s.data();
+                            const gk = grade.replace(/\s+/g, '_');
+                            const gd = d.gradeDistribution || {};
+                            tx.update(statsRef, {
+                                total: increment(1), male: increment(gender === 'ذكر' ? 1 : 0),
+                                female: increment(gender === 'أنثى' ? 1 : 0),
+                                todayCount: d.lastReset === today ? increment(1) : 1,
+                                lastReset: today, [`gradeDistribution.${gk}`]: increment(1),
+                                lastRegisteredName: name, lastRegisteredTimestamp: serverTimestamp()
+                            });
+                        }
+                    });
+                } catch (e) {}
+
+                showToast(`✅ تم إضافة الطالب ${name} - رقم التسجيل: ${regId}`, 'success');
+                document.getElementById('addStudentModal').classList.remove('show');
+                btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> حفظ الطالب';
+                // إعادة ضبط الحقول
+                document.querySelectorAll('#addStudentModal input, #addStudentModal textarea').forEach(el => el.value = '');
+                loadStudents(true);
+                refreshStatsFromFirestore();
+                logAction('add', `إضافة طالب ${name} من لوحة التحكم`);
+            } catch (e) {
+                console.error(e);
+                showToast('❌ فشل إضافة الطالب: ' + e.message, 'error');
+                btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> حفظ الطالب';
+            }
+        }
         document.getElementById('passToggleBtn').addEventListener('click', function() {
             const input = adminPassInput;
             const icon = this.querySelector('i');
@@ -3298,7 +3466,7 @@
                 // Ctrl/Cmd + N لإضافة طالب جديد
                 if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
                     e.preventDefault();
-                    window.location.href = 'index.html';
+                    document.getElementById('addStudentBtn').click();
                 }
 
                 // Ctrl/Cmd + E لتصدير Excel
@@ -3325,7 +3493,7 @@
                     document.querySelector('.table-wrapper')?.scrollIntoView({ behavior: 'smooth' });
                     break;
                 case 'add-student':
-                    window.location.href = 'index.html';
+                    document.getElementById('addStudentBtn').click();
                     break;
                 case 'export-excel':
                     exportFormat.value = 'excel';
