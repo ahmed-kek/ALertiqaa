@@ -166,18 +166,40 @@
         }
         .btn-logout { background: var(--danger); color: #fff; }
         .btn-logout:hover { background: var(--danger-dark); }
-        .btn-export-all { background: #2b6cb0; color: #fff; }
-        .btn-export-all:hover { background: var(--info-dark); }
-        .btn-add-student { background: var(--accent, #b08f4a); color: #fff; }
-        .btn-add-student:hover { background: var(--accent-dark, #8a6f3a); }
-        .btn-export-page { background: var(--success); color: #fff; }
-        .btn-export-page:hover { background: var(--success-dark); }
-        .btn-refresh { background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.2) !important; }
-        .btn-refresh:hover { background: rgba(255,255,255,0.25); }
-        .btn-cleanup { background: #dd6b20; color: #fff; }
-        .btn-cleanup:hover { background: #c05621; }
-        .btn-backup { background: var(--info); color: #fff; }
-        .btn-backup:hover { background: var(--info-dark); }
+        /* ===== شريط أدوات الجدول (تصدير + إضافة طالب) ===== */
+        .table-toolbar {
+            display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 12px;
+            background: var(--bg-card); padding: 14px 20px; border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+            box-shadow: var(--shadow-sm); margin-bottom: 0;
+            border-bottom: 2px solid var(--border-light);
+        }
+        .table-toolbar .export-group {
+            display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+        }
+        .table-toolbar .export-select {
+            padding: 7px 12px; border: 2px solid var(--border); border-radius: 10px;
+            font-family: var(--font); font-size: 12px; background: var(--bg-card); color: var(--text-primary);
+            cursor: pointer; transition: var(--transition); min-width: 0;
+        }
+        .table-toolbar .export-select:focus { border-color: var(--primary); outline: none; }
+        .table-toolbar .btn-export-all {
+            padding: 8px 18px; background: #2b6cb0; color: #fff; border: none; border-radius: 10px;
+            font-weight: 700; font-family: var(--font); font-size: 13px; cursor: pointer;
+            transition: var(--transition);
+        }
+        .table-toolbar .btn-export-all:hover { background: var(--info-dark); }
+        .table-toolbar .btn-add-student {
+            padding: 8px 18px; background: var(--accent); color: #fff; border: none; border-radius: 10px;
+            font-weight: 700; font-family: var(--font); font-size: 13px; cursor: pointer;
+            transition: var(--transition);
+        }
+        .table-toolbar .btn-add-student:hover { background: var(--accent-dark); }
+        @media (max-width: 768px) {
+            .table-toolbar { flex-direction: column; align-items: stretch; }
+            .table-toolbar .export-group { justify-content: center; }
+            .table-toolbar .export-select { font-size: 11px; padding: 6px 8px; }
+        }
         /* ===== الإحصائيات ===== */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 15px; margin-bottom: 25px; }
         .stat-card {
@@ -678,7 +700,7 @@
         /* ===== Print Styles ===== */
         @media print {
             body { background: #fff !important; padding: 0 !important; }
-            .admin-header, .actions, .tab-bar, .filter-section, .bulk-actions-wrapper,
+            .admin-header, .actions, .tab-bar, .table-toolbar, .filter-section, .bulk-actions-wrapper,
             .pagination, .control-section, .table-wrapper thead, .action-btns,
             .btn-print-report, .btn-pdf-report, .close-modal, #toast-container { display: none !important; }
             .modal-overlay { position: static !important; background: none !important; backdrop-filter: none !important; }
@@ -738,32 +760,6 @@
                     <div><h1>لوحة تحكم الأرتقاء <small>Al-Ertiqaa Private Schools</small></h1></div>
                 </div>
                 <div class="actions">
-                    <button class="btn-refresh" id="refreshBtn"><i class="fas fa-sync-alt"></i> تحديث</button>
-                    <div class="export-group">
-                        <select id="exportFormat" class="export-select" title="صيغة التصدير">
-                            <option value="csv">CSV</option>
-                            <option value="excel">Excel</option>
-                            <option value="pdf">PDF</option>
-                            <option value="json">JSON</option>
-                        </select>
-                        <select id="exportScope" class="export-select" title="نطاق التصدير">
-                            <option value="all">كل الطلاب</option>
-                            <option value="page">الصفحة الحالية</option>
-                            <option value="selected">المحددون</option>
-                        </select>
-                        <select id="exportSortField" class="export-select" title="ترتيب حسب">
-                            <option value="registeredAt">تاريخ التسجيل</option>
-                            <option value="fullName">الاسم</option>
-                            <option value="grade">الصف</option>
-                            <option value="status">الحالة</option>
-                        </select>
-                        <select id="exportSortOrder" class="export-select" title="ترتيب">
-                            <option value="desc">الأحدث أولاً</option>
-                            <option value="asc">الأقدم أولاً</option>
-                        </select>
-                        <button class="btn-export-all" id="exportBtn"><i class="fas fa-download"></i> تصدير</button>
-                    </div>
-                    <button class="btn-add-student" id="addStudentBtn"><i class="fas fa-user-plus"></i> إضافة طالب</button>
                     <button class="btn-logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> خروج</button>
                 </div>
             </div>
@@ -821,6 +817,34 @@
                         <button class="btn-bulk-export" id="bulkStatusBtn" style="background:#b08f4a;color:#fff;"><i class="fas fa-tags"></i> تغيير الحالة</button>
                         <button class="btn-bulk-delete" id="bulkDeleteBtn"><i class="fas fa-trash"></i> حذف المحدد</button>
                     </div>
+                </div>
+
+                <div class="table-toolbar">
+                    <div class="export-group">
+                        <select id="exportFormat" class="export-select" title="صيغة التصدير">
+                            <option value="csv">CSV</option>
+                            <option value="excel">Excel</option>
+                            <option value="pdf">PDF</option>
+                            <option value="json">JSON</option>
+                        </select>
+                        <select id="exportScope" class="export-select" title="نطاق التصدير">
+                            <option value="all">كل الطلاب</option>
+                            <option value="page">الصفحة الحالية</option>
+                            <option value="selected">المحددون</option>
+                        </select>
+                        <select id="exportSortField" class="export-select" title="ترتيب حسب">
+                            <option value="registeredAt">تاريخ التسجيل</option>
+                            <option value="fullName">الاسم</option>
+                            <option value="grade">الصف</option>
+                            <option value="status">الحالة</option>
+                        </select>
+                        <select id="exportSortOrder" class="export-select" title="ترتيب">
+                            <option value="desc">الأحدث أولاً</option>
+                            <option value="asc">الأقدم أولاً</option>
+                        </select>
+                        <button class="btn-export-all" id="exportBtn"><i class="fas fa-download"></i> تصدير</button>
+                    </div>
+                    <button class="btn-add-student" id="addStudentBtn"><i class="fas fa-user-plus"></i> إضافة طالب</button>
                 </div>
 
                 <div class="table-wrapper">
@@ -1227,7 +1251,7 @@
         const loginBtn = document.getElementById('loginBtn');
         const loginError = document.getElementById('loginError');
         const logoutBtn = document.getElementById('logoutBtn');
-        const refreshBtn = document.getElementById('refreshBtn');
+        
 
         const toggleSwitch = document.getElementById('toggleSwitch');
         const statusBadge = document.getElementById('statusBadge');
@@ -2506,11 +2530,6 @@
             lastVisible = null;
             loadStudents(true);
             showToast('🧹 تم إعادة ضبط الفلاتر.', 'info');
-        });
-
-        refreshBtn.addEventListener('click', () => {
-            loadStudents(true);
-            showToast('🔄 تم تحديث البيانات.', 'info');
         });
 
         // ===== تغيير حالة التسجيل مع تأكيد =====
