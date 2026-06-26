@@ -1126,6 +1126,12 @@
 
         let logsListenerSetup = false;
 
+        function refreshLogsView() {
+            if (logsUnsubscribe) logsUnsubscribe();
+            logsListenerSetup = false;
+            setupLogsListener();
+        }
+
         function setupLogsListener() {
             if (logsListenerSetup) return;
             logsListenerSetup = true;
@@ -1558,12 +1564,19 @@
             const grade = filterGrade.value;
             const gender = filterGender.value;
             const year = filterAcademicYear.value;
-            const status = filterStatus.value;
 
             constraints.push(where("deleted", "==", false));
             if (year) constraints.push(where("academicYear", "==", year));
             if (grade) constraints.push(where("grade", "==", grade));
             if (gender) constraints.push(where("gender", "==", gender));
+            const dateFrom = filterDateFrom.value;
+            const dateTo = filterDateTo.value;
+            if (dateFrom) constraints.push(where("registeredAt", ">=", new Date(dateFrom)));
+            if (dateTo) {
+                const end = new Date(dateTo);
+                end.setDate(end.getDate() + 1);
+                constraints.push(where("registeredAt", "<", end));
+            }
 
             if (!isLocalSearch) {
                 constraints.push(orderBy("registeredAt", "desc"));
@@ -1996,6 +2009,8 @@
             setupDarkMode();
             setupTableEventDelegation();
             setupVirtualScroll();
+            if (document.getElementById('clearLogsBtn')._listenerAttached) return;
+            document.getElementById('clearLogsBtn')._listenerAttached = true;
             document.getElementById('clearLogsBtn').addEventListener('click', async function() {
                 try {
                     const snap = await getDocs(query(collection(db, "logs"), limit(500)));
@@ -2009,9 +2024,9 @@
                             await setDoc(doc(db, "logs", log.id), log.data);
                         }
                         showToast(`↩️ تمت استعادة ${deletedLogs.length} سجل.`, 'info');
-                        loadLogs();
+                        refreshLogsView();
                     });
-                    loadLogs();
+                    refreshLogsView();
                 } catch (e) { showToast('❌ فشل المسح: ' + e.message, 'error'); }
             });
 
@@ -2252,16 +2267,19 @@
         window.saveAsPDF = async function() {
             const content = document.getElementById('detailContent');
             if (!content || !content.innerHTML) { showToast('لا توجد بيانات للتصدير.', 'error'); return; }
+            if (!window.html2canvas || !window.jspdf?.jsPDF) {
+                showToast('❌ لم يتم تحميل مكتبات PDF بعد. حاول مرة أخرى.', 'error');
+                return;
+            }
             showToast('⏳ جاري تجهيز ملف PDF...', 'info');
             try {
-                const { default: html2canvas } = await import('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
-                const { default: jsPDF } = await import('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
                 const clone = content.cloneNode(true);
                 clone.style.cssText = 'padding:20px;font-family:Cairo;direction:rtl;background:#fff;color:#1a202c;';
                 document.body.appendChild(clone);
-                const canvas = await html2canvas(clone, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+                const canvas = await window.html2canvas(clone, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
                 document.body.removeChild(clone);
                 const imgData = canvas.toDataURL('image/png');
+                const { jsPDF } = window.jspdf;
                 const pdf = new jsPDF('p', 'mm', 'a4');
                 const pdfWidth = pdf.internal.pageSize.getWidth();
                 const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
