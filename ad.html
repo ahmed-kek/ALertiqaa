@@ -1646,7 +1646,13 @@
                 }
 
                 if (resetPage) {
-                    totalDocs = cachedTotalFromStats || 0;
+                    try {
+                        const allCount = await getCountFromServer(query(collection(db, "students")));
+                        const delCount = await getCountFromServer(query(collection(db, "students"), where("deleted", "==", true)));
+                        totalDocs = allCount.data().count - delCount.data().count;
+                    } catch (e) {
+                        totalDocs = cachedTotalFromStats || 0;
+                    }
                 }
 
                 // استخدام آخر مستند من snapshot الأصلي للـ cursor (وليس من docs المفلتر)
@@ -1940,14 +1946,16 @@
             if (count > 0) {
                 bar.classList.add('show');
                 info.textContent = `تم تحديد عدد (${count}) طالب للتحكم السريع الجماعي`;
-                document.getElementById('selectAllCheck').checked = false;
+                if (!isSelectAllFiring) document.getElementById('selectAllCheck').checked = false;
             } else {
                 bar.classList.remove('show');
             }
         }
 
-        // ===== اختيار الكل =====
+        // ===== اختيار الكل (يمنع التضارب مع updateBulkActionsBar) =====
+        let isSelectAllFiring = false;
         document.getElementById('selectAllCheck').addEventListener('change', function() {
+            isSelectAllFiring = true;
             const checks = document.querySelectorAll('.student-check');
             if (this.checked) {
                 checks.forEach(chk => {
@@ -1961,6 +1969,7 @@
                 });
             }
             updateBulkActionsBar();
+            isSelectAllFiring = false;
         });
 
         // ===== تحميل كاش الطلاب من localStorage =====
