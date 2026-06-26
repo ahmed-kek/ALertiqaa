@@ -1224,7 +1224,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
-        import { initializeFirestore, doc, setDoc, getDoc, getDocs, collection, addDoc, persistentLocalCache, serverTimestamp, increment, updateDoc, runTransaction, query, where } from
+        import { initializeFirestore, doc, setDoc, getDoc, collection, addDoc, persistentLocalCache, serverTimestamp, increment, updateDoc, runTransaction, arrayUnion } from
             "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
 
         // import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app-check.js";
@@ -1253,8 +1253,9 @@
         const db = initializeFirestore(app, { localCache: persistentLocalCache() });
         const statsRef = doc(db, "config", "stats");
         const counterRef = doc(db, "config", "registrationCounter");
+        const settingsRef = doc(db, "config", "settings");
 
-        // ===== تهيئة عداد Firestore (Counter) لتقليل القراءات =====
+        // ===== تهيئة مستندات Firestore الأساسية =====
         async function initCounter() {
             try {
                 const snap = await getDoc(statsRef);
@@ -1265,10 +1266,13 @@
                         gradeDistribution: {}
                     });
                 }
-                // تهيئة عداد التسجيل
                 const cSnap = await getDoc(counterRef);
                 if (!cSnap.exists()) {
                     await setDoc(counterRef, { currentNumber: 0 });
+                }
+                const sSnap = await getDoc(settingsRef);
+                if (!sSnap.exists()) {
+                    await setDoc(settingsRef, { registrationOpen: true, currentAcademicYear: "2026-2027" });
                 }
             } catch (e) { /* أول مرة فقط */ }
         }
@@ -1287,7 +1291,10 @@
             if (!phone) return false;
             let clean = String(phone).replace(/[\s\-\(\)\+]/g, '');
             clean = normalizeArabicNumerals(clean);
-            if (clean.startsWith('964')) clean = '0' + clean.substring(3);
+            if (clean.startsWith('00964')) clean = '0' + clean.substring(5);
+            else if (clean.startsWith('964')) clean = '0' + clean.substring(3);
+            else if (clean.startsWith('00966')) clean = '0' + clean.substring(5);
+            else if (clean.startsWith('966')) clean = '0' + clean.substring(3);
             return /^(05\d{8}|07[3-9]\d{8}|01\d{9})$/.test(clean);
         }
 
@@ -1298,19 +1305,19 @@
         }
         async function checkDuplicate(phone, name) {
             try {
-                const q = query(collection(db, "students"), where("phone", "==", phone), limit(10));
-                const snap = await getDocs(q);
-                const active = snap.docs.filter(d => !d.data().deleted);
-                if (active.length === 0) return null;
-                // حتى لو الهاتف متكرر، نتأكد إذا كان نفس الاسم
+                // نستخدم `phoneRegistry` بدلاً من students (لأنه مقروء للجميع)
+                const regSnap = await getDoc(doc(db, "config", "phoneRegistry", phone));
+                if (!regSnap.exists()) return null;
+                const data = regSnap.data();
+                const names = data.names || [];
                 const normalName = normalizeForDedup(name);
-                for (const d of active) {
-                    const existing = normalizeForDedup(d.data().fullName);
-                    if (existing === normalName || existing.includes(normalName) || normalName.includes(existing)) {
-                        return { type: 'exact', student: d.data() };
+                for (const existing of names) {
+                    const normExisting = normalizeForDedup(existing);
+                    if (normExisting === normalName || normExisting.includes(normalName) || normalName.includes(normExisting)) {
+                        return { type: 'exact', student: { fullName: existing } };
                     }
                 }
-                return { type: 'phone_only', count: active.length };
+                return { type: 'phone_only', count: names.length };
             } catch (e) { return null; }
         }
 
@@ -1354,6 +1361,8 @@
                         isValid = !isNaN(date) && date <= youngest && date >= oldest;
                     } else if (id === 'gender' || id === 'grade') {
                         isValid = val !== '';
+                    } else if (id === 'parentName') {
+                        isValid = val.length >= 3;
                     } else {
                         isValid = val !== '';
                     }
@@ -1403,6 +1412,8 @@
                             isValid = !isNaN(date) && date <= youngest && date >= oldest;
                         } else if (id === 'gender' || id === 'grade') {
                             isValid = val !== '';
+                        } else if (id === 'parentName') {
+                            isValid = val.length >= 3;
                         } else {
                             isValid = val !== '';
                         }
@@ -1637,7 +1648,10 @@
             const sGrade = document.getElementById('grade').value;
             let cleanPhone = document.getElementById('phone').value.trim();
             cleanPhone = normalizeArabicNumerals(cleanPhone.replace(/[\s\-\(\)\+]/g, ''));
-            if (cleanPhone.startsWith('964')) cleanPhone = '0' + cleanPhone.substring(3);
+            if (cleanPhone.startsWith('00964')) cleanPhone = '0' + cleanPhone.substring(5);
+            else if (cleanPhone.startsWith('964')) cleanPhone = '0' + cleanPhone.substring(3);
+            else if (cleanPhone.startsWith('00966')) cleanPhone = '0' + cleanPhone.substring(5);
+            else if (cleanPhone.startsWith('966')) cleanPhone = '0' + cleanPhone.substring(3);
 
             // ===== فحص التكرار =====
             showSubmitProgress('الخطوة 2 من 4: فحص التكرار', 'جاري فحص البيانات...', 35);
@@ -1704,6 +1718,21 @@
                 };
 
                 await addDoc(collection(db, "students"), studentData);
+
+                // ===== تسجيل الهاتف في سجل التكرار =====
+                try {
+                    const phoneRegRef = doc(db, "config", "phoneRegistry", cleanPhone);
+                    const regSnap = await getDoc(phoneRegRef);
+                    if (regSnap.exists()) {
+                        const regData = regSnap.data();
+                        const names = regData.names || [];
+                        if (!names.includes(sName)) {
+                            await updateDoc(phoneRegRef, { names: arrayUnion(sName), count: increment(1) });
+                        }
+                    } else {
+                        await setDoc(phoneRegRef, { names: [sName], count: 1 });
+                    }
+                } catch (e) { console.warn("⚠️ فشل تسجيل الهاتف:", e); }
 
                 // ===== تحديث العداد (قراءة واحدة بدلاً 2000) =====
                 try {
@@ -1775,13 +1804,11 @@
                     submitBtn.disabled = false;
                     submitBtn.classList.remove('loading');
                 }, 3000);
-
-                completeSubmitProgress(true);
             } catch (error) {
                 console.error(error);
                 completeSubmitProgress(false);
                 if (error.code === 'permission-denied') {
-                    showToast('⛔ تم إغلاق التسجيل من قِبل الإدارة.', 'error');
+                    showToast('⛔ تعذر الحفظ. قد يكون التسجيل مغلقاً أو أن البيانات غير مكتملة.', 'error');
                 } else {
                     showToast('⚠️ حدث خطأ أثناء الحفظ. يرجى المحاولة مرة أخرى.', 'error');
                 }

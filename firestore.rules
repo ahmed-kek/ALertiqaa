@@ -34,9 +34,21 @@ service cloud.firestore {
     match /config/settings {
       allow read: if true;
       allow write: if isAdmin();
+      allow create: if true;
     }
 
     match /config/stats {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    match /config/registrationCounter {
+      allow read: if true;
+      allow write: if isAdmin();
+      allow create: if true;
+    }
+
+    match /config/phoneRegistry/{phone} {
       allow read: if true;
       allow write: if true;
     }

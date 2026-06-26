@@ -1189,7 +1189,7 @@
                 });
                 tbody.innerHTML = html;
             } catch (e) {
-                tbody.innerHTML = `<tr><td colspan="6" class="empty-msg"><i class="fas fa-exclamation-triangle"></i> خطأ: ${e.message}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="empty-msg"><i class="fas fa-exclamation-triangle"></i> خطأ: ${escapeHTML(e.message)}</td></tr>`;
             }
         }
 
@@ -1393,6 +1393,13 @@
                     const d = snap.data();
                     setLocalCache('alertiqaa_admin_stats', d);
                     applyStatsToUI(d);
+                } else {
+                    await setDoc(statsRef, {
+                        total: 0, male: 0, female: 0, todayCount: 0,
+                        lastReset: new Date().toISOString().split('T')[0],
+                        gradeDistribution: {}
+                    });
+                    applyStatsToUI({ total: 0, male: 0, female: 0, todayCount: 0, gradeDistribution: {} });
                 }
             } catch (e) { console.warn("⚠️ فشل جلب الإحصائيات:", e); }
         }
@@ -1773,11 +1780,12 @@
                 const safeGender = escapeHTML(data.gender || '-');
                 const safeParent = escapeHTML(data.parentName || '-');
                 const safePhone = escapeHTML(data.phone || '-');
-                const status = data.status || 'جديد';
-                const statusClass = status === 'جديد' ? 'new' : status === 'تم الاتصال' ? 'contacted' : status === 'مؤكد' ? 'confirmed' : status === 'منسحب' ? 'withdrawn' : status === 'ملغي' ? 'cancelled' : 'new';
+                const rawStatus = data.status || 'جديد';
+                const safeStatus = escapeHTML(rawStatus);
+                const statusClass = rawStatus === 'جديد' ? 'new' : rawStatus === 'تم الاتصال' ? 'contacted' : rawStatus === 'مؤكد' ? 'confirmed' : rawStatus === 'منسحب' ? 'withdrawn' : rawStatus === 'ملغي' ? 'cancelled' : 'new';
 
                 const isChecked = selectedStudentIds.has(doc.id) ? 'checked' : '';
-                html += `<tr><td><input type="checkbox" class="student-check" data-id="${doc.id}" style="width:18px;height:18px;cursor:pointer;" ${isChecked}></td><td>${index}</td><td><strong>${safeName}</strong></td><td><span class="badge-grade">${safeGrade}</span></td><td>${safeGender}</td><td><span class="badge-status ${statusClass}">${status}</span></td><td>${safeParent}</td><td dir="ltr">${safePhone}</td><td style="font-size:12px;">${formattedDate}<br>${time}</td><td><div class="action-btns"><button class="btn-view" data-id="${doc.id}"><i class="fas fa-eye"></i> عرض</button><button class="btn-edit" data-id="${doc.id}"><i class="fas fa-edit"></i> تعديل</button><button class="btn-delete" data-id="${doc.id}" data-grade="${escapeHTML(data.grade || 'غير_محدد')}" data-gender="${escapeHTML(data.gender || '')}"><i class="fas fa-trash"></i> حذف</button></div></td></tr>`;
+                html += `<tr><td><input type="checkbox" class="student-check" data-id="${doc.id}" style="width:18px;height:18px;cursor:pointer;" ${isChecked}></td><td>${index}</td><td><strong>${safeName}</strong></td><td><span class="badge-grade">${safeGrade}</span></td><td>${safeGender}</td><td><span class="badge-status ${statusClass}">${safeStatus}</span></td><td>${safeParent}</td><td dir="ltr">${safePhone}</td><td style="font-size:12px;">${formattedDate}<br>${time}</td><td><div class="action-btns"><button class="btn-view" data-id="${doc.id}"><i class="fas fa-eye"></i> عرض</button><button class="btn-edit" data-id="${doc.id}"><i class="fas fa-edit"></i> تعديل</button><button class="btn-delete" data-id="${doc.id}" data-grade="${escapeHTML(data.grade || 'غير_محدد')}" data-gender="${escapeHTML(data.gender || '')}"><i class="fas fa-trash"></i> حذف</button></div></td></tr>`;
                 index++;
             });
             studentsBody.innerHTML = html;
@@ -2820,7 +2828,7 @@
                         let html = `<h2 style="color:#063a33;text-align:center;">مدارس الأرتقاء الأهلية</h2><h3 style="text-align:center;color:#b08f4a;">تقرير الطلاب</h3><table style="width:100%;border-collapse:collapse;margin-top:15px;font-size:11px;"><thead><tr style="background:#063a33;color:#fff;"><th style="padding:6px;border:1px solid #ddd;">#</th><th style="padding:6px;border:1px solid #ddd;">الاسم</th><th style="padding:6px;border:1px solid #ddd;">الصف</th><th style="padding:6px;border:1px solid #ddd;">الجوال</th><th style="padding:6px;border:1px solid #ddd;">الحالة</th></tr></thead><tbody>`;
                         docs.forEach((d, i) => {
                             const s = d.data ? d.data() : d;
-                            html += `<tr><td style="padding:5px;border:1px solid #ddd;text-align:center;">${i+1}</td><td style="padding:5px;border:1px solid #ddd;">${s.fullName || ''}</td><td style="padding:5px;border:1px solid #ddd;">${s.grade || ''}</td><td style="padding:5px;border:1px solid #ddd;">${s.phone || ''}</td><td style="padding:5px;border:1px solid #ddd;">${s.status || 'جديد'}</td></tr>`;
+                            html += `<tr><td style="padding:5px;border:1px solid #ddd;text-align:center;">${i+1}</td><td style="padding:5px;border:1px solid #ddd;">${escapeHTML(s.fullName || '')}</td><td style="padding:5px;border:1px solid #ddd;">${escapeHTML(s.grade || '')}</td><td style="padding:5px;border:1px solid #ddd;">${escapeHTML(s.phone || '')}</td><td style="padding:5px;border:1px solid #ddd;">${escapeHTML(s.status || 'جديد')}</td></tr>`;
                         });
                         html += '</tbody></table>';
                         container.innerHTML = html;
@@ -2929,11 +2937,11 @@
                     </div>
                     <h3 style="color:#063a33;">توزيع الصفوف</h3>
                     <table><tr><th>الصف</th><th>العدد</th></tr>
-                    ${Object.entries(grades).sort((a,b) => a[0].localeCompare(b[0], 'ar')).map(([k,v]) => `<tr><td>${k}</td><td>${v}</td></tr>`).join('')}
+                    ${Object.entries(grades).sort((a,b) => a[0].localeCompare(b[0], 'ar')).map(([k,v]) => `<tr><td>${escapeHTML(k)}</td><td>${v}</td></tr>`).join('')}
                     </table>
                     <h3 style="color:#063a33;">توزيع الحالات</h3>
                     <table><tr><th>الحالة</th><th>العدد</th></tr>
-                    ${Object.entries(statuses).map(([k,v]) => `<tr><td>${k}</td><td>${v}</td></tr>`).join('')}
+                    ${Object.entries(statuses).map(([k,v]) => `<tr><td>${escapeHTML(k)}</td><td>${v}</td></tr>`).join('')}
                     </table>
                     <div class="footer-text">تم إنشاء التقرير في ${new Date().toLocaleString('ar-EG')} &copy; مدارس الأرتقاء الأهلية</div>
                     <script>window.print();window.close();<\/script>
