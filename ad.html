@@ -1479,25 +1479,19 @@
             configRefreshInterval = setInterval(refreshConfigFromFirestore, 300000);
         }
 
-        // ===== تحقق من صلاحية المدير =====
+        // ===== تحقق من صلاحية المدير (عن طريق البريد الإلكتروني) =====
+        const ADMIN_EMAIL = 'alartqaaschool@gmail.com';
         async function checkAdminPermission() {
             const user = auth.currentUser;
             if (!user) {
                 showToast('❌ يرجى تسجيل الدخول.', 'error');
                 return false;
             }
-            try {
-                const tokenResult = await user.getIdTokenResult();
-                if (!tokenResult.claims.admin) {
-                    showToast('❌ ليس لديك صلاحية لإجراء هذه العملية.', 'error');
-                    return false;
-                }
-                return true;
-            } catch (error) {
-                console.error("خطأ في التحقق من الصلاحية:", error);
-                showToast('❌ حدث خطأ في التحقق من الصلاحية.', 'error');
+            if (user.email !== ADMIN_EMAIL) {
+                showToast('❌ ليس لديك صلاحية لإجراء هذه العملية.', 'error');
                 return false;
             }
+            return true;
         }
 
         onAuthStateChanged(auth, (user) => {
