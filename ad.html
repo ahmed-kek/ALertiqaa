@@ -2008,6 +2008,9 @@
         }
 
         function updateStatusBadge(isOpen) {
+            statusBadge.className = `status-badge ${isOpen ? 'open' : 'closed'}`;
+            statusBadge.textContent = isOpen ? 'مفتوح ✅' : 'مغلق ❌';
+        }
 
         // ===== Virtual Scrolling Setup =====
         let virtualScrollEnabled = false;
