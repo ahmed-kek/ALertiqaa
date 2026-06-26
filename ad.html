@@ -1647,9 +1647,10 @@
 
                 if (resetPage) {
                     try {
-                        const allCount = await getCountFromServer(query(collection(db, "students")));
-                        const delCount = await getCountFromServer(query(collection(db, "students"), where("deleted", "==", true)));
-                        totalDocs = allCount.data().count - delCount.data().count;
+                        const cntConstraints = buildConstraints(true);
+                        const allSnap = await getCountFromServer(query(collection(db, "students"), ...cntConstraints));
+                        const delSnap = await getCountFromServer(query(collection(db, "students"), where("deleted", "==", true), ...cntConstraints));
+                        totalDocs = allSnap.data().count - delSnap.data().count;
                     } catch (e) {
                         totalDocs = cachedTotalFromStats || 0;
                     }
@@ -1946,31 +1947,12 @@
             if (count > 0) {
                 bar.classList.add('show');
                 info.textContent = `تم تحديد عدد (${count}) طالب للتحكم السريع الجماعي`;
-                if (!isSelectAllFiring) document.getElementById('selectAllCheck').checked = false;
             } else {
                 bar.classList.remove('show');
             }
+            const totalVisible = document.querySelectorAll('.student-check').length;
+            document.getElementById('selectAllCheck').checked = (count > 0 && count === totalVisible);
         }
-
-        // ===== اختيار الكل (يمنع التضارب مع updateBulkActionsBar) =====
-        let isSelectAllFiring = false;
-        document.getElementById('selectAllCheck').addEventListener('change', function() {
-            isSelectAllFiring = true;
-            const checks = document.querySelectorAll('.student-check');
-            if (this.checked) {
-                checks.forEach(chk => {
-                    chk.checked = true;
-                    selectedStudentIds.add(chk.dataset.id);
-                });
-            } else {
-                checks.forEach(chk => {
-                    chk.checked = false;
-                    selectedStudentIds.delete(chk.dataset.id);
-                });
-            }
-            updateBulkActionsBar();
-            isSelectAllFiring = false;
-        });
 
         // ===== تحميل كاش الطلاب من localStorage =====
         function loadStudentNameCache() {
@@ -2216,10 +2198,10 @@
                 updateBulkActionsBar();
             });
 
-            // Select all checkbox
+            // Select all checkbox (وحيد دون تضارب)
             const selectAllCheck = document.getElementById('selectAllCheck');
-            if (selectAllCheck && !selectAllCheck._delegated) {
-                selectAllCheck._delegated = true;
+            if (selectAllCheck && !selectAllCheck._selHandler) {
+                selectAllCheck._selHandler = true;
                 selectAllCheck.addEventListener('change', function() {
                     const checks = document.querySelectorAll('.student-check');
                     if (this.checked) {
