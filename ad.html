@@ -1990,6 +1990,29 @@
         });
 
         // ===== تحميل بيانات اللوحة =====
+        let _statsRecalculated = false;
+        async function recalcStatsOnce() {
+            try {
+                const allP = getCountFromServer(query(collection(db, "students")));
+                const delP = getCountFromServer(query(collection(db, "students"), where("deleted", "==", true)));
+                const maleP = getCountFromServer(query(collection(db, "students"), where("gender", "==", "ذكر")));
+                const femaleP = getCountFromServer(query(collection(db, "students"), where("gender", "==", "أنثى")));
+                const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+                const todayP = getCountFromServer(query(collection(db, "students"), where("registeredAt", ">=", todayStart)));
+
+                const [allR, delR, maleR, femaleR, todayR] = await Promise.all([allP, delP, maleP, femaleP, todayP]);
+                const total = allR.data().count - delR.data().count;
+                const male = maleR.data().count;
+                const female = femaleR.data().count;
+                const todayCount = todayR.data().count;
+
+                await setDoc(statsRef, { total, male, female, todayCount, lastReset: new Date().toISOString().split('T')[0], lastUpdated: serverTimestamp() }, { merge: true });
+                _statsRecalculated = true;
+                // نقرأ البيانات المحدثة (بما فيها gradeDistribution من التسجيلات السابقة)
+                const updatedSnap = await getDoc(statsRef);
+                if (updatedSnap.exists()) applyStatsToUI(updatedSnap.data());
+            } catch (e) { console.warn("⚠️ فشل التصحيح الأولي للإحصائيات:", e); }
+        }
         function loadDashboardData() {
             if ('Notification' in window && Notification.permission === 'default') {
                 Notification.requestPermission();
@@ -1998,6 +2021,7 @@
             setupStatsCaching();
             setupConfigCaching();
             loadStudents(true);
+            if (!_statsRecalculated) recalcStatsOnce();
             setupSearchDebounce();
             setupFilterDebounce();
             setupTabs();
