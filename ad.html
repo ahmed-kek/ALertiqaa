@@ -89,12 +89,6 @@
                 --shadow-md: 0 8px 25px rgba(0,0,0,0.4);
                 --shadow-lg: 0 25px 60px rgba(0,0,0,0.5);
             }
-            :root:not([data-theme="light"]) .btn-dark-toggle {
-                background: rgba(255,255,255,0.15);
-            }
-            :root:not([data-theme="light"]) .btn-dark-toggle i::before {
-                content: "\f185"; /* fa-sun */
-            }
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html { scroll-behavior: smooth; }
@@ -184,9 +178,6 @@
         .btn-cleanup:hover { background: #c05621; }
         .btn-backup { background: var(--info); color: #fff; }
         .btn-backup:hover { background: var(--info-dark); }
-        .btn-dark-toggle { background: rgba(255,255,255,0.15); color: #fff; }
-        .btn-dark-toggle:hover { background: rgba(255,255,255,0.25); }
-
         /* ===== الإحصائيات ===== */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 15px; margin-bottom: 25px; }
         .stat-card {
@@ -536,54 +527,6 @@
         }
         .btn-permanent-delete:hover { background: #9b2c2c; }
 
-        /* ===== سجل العمليات ===== */
-        .log-list { background: var(--bg-card); border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-sm); }
-        .export-group { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-        .export-select {
-            padding: 6px 10px; border: 2px solid var(--border); border-radius: 10px;
-            font-family: var(--font); font-size: 12px; background: var(--bg-card); color: var(--text-primary);
-            cursor: pointer; transition: var(--transition); min-width: 0;
-        }
-        .export-select:focus { border-color: var(--primary); outline: none; }
-        @media (max-width: 768px) {
-            .export-group select { font-size: 11px; padding: 4px 6px; }
-        }
-        .log-item {
-            display: flex; align-items: center; gap: 15px;
-            padding: 14px 20px; border-bottom: 1px solid var(--border-light);
-            font-size: 14px;
-        }
-        .log-item:last-child { border-bottom: none; }
-        .log-item .log-icon {
-            width: 36px; height: 36px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 16px; flex-shrink: 0;
-        }
-        .log-item .log-icon.login { background: #c6f6d5; color: #22543d; }
-        .log-item .log-icon.logout { background: #fed7d7; color: #742a2a; }
-        .log-item .log-icon.delete { background: #fed7d7; color: #9b2c2c; }
-        .log-item .log-icon.restore { background: #fefcbf; color: #744210; }
-        .log-item .log-icon.export { background: #bee3f8; color: #2a69ac; }
-        .log-item .log-icon.toggle { background: #e9d8fd; color: #553c9a; }
-        .log-item .log-info { flex: 1; }
-        .log-item .log-info .log-action { font-weight: 700; color: var(--text-primary); }
-        .log-item .log-info .log-details { color: var(--text-secondary); font-size: 13px; }
-        .log-item .log-time { color: var(--text-muted); font-size: 12px; white-space: nowrap; }
-        .logs-header {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 15px 20px; background: var(--bg);
-            border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 10px;
-        }
-        .logs-header .title { font-weight: 700; color: var(--primary-dark); }
-        .logs-header .title i { color: var(--accent); margin-left: 8px; }
-        .logs-header .clear-logs-btn {
-            padding: 6px 16px; background: #fed7d7; color: #9b2c2c;
-            border: none; border-radius: 10px; font-weight: 600;
-            cursor: pointer; font-family: var(--font); font-size: 13px;
-            transition: var(--transition);
-        }
-        .logs-header .clear-logs-btn:hover { background: #feb2b2; }
-
         /* ===== Toast ===== */
         .toast {
             position: fixed; bottom: 20px; right: 20px; padding: 14px 28px;
@@ -821,7 +764,6 @@
                         <button class="btn-export-all" id="exportBtn"><i class="fas fa-download"></i> تصدير</button>
                     </div>
                     <button class="btn-add-student" id="addStudentBtn"><i class="fas fa-user-plus"></i> إضافة طالب</button>
-                    <button class="btn-dark-toggle" id="darkModeToggle"><i class="fas fa-moon"></i></button>
                     <button class="btn-logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> خروج</button>
                 </div>
             </div>
@@ -830,14 +772,12 @@
             <div class="tab-bar">
                 <button class="tab-btn active" data-tab="tabHome"><i class="fas fa-home"></i> الرئيسية</button>
                 <button class="tab-btn" data-tab="tabTrash"><i class="fas fa-trash-alt"></i> سلة المحذوفات <span id="trashBadge" class="tab-badge">0</span></button>
-                <button class="tab-btn" data-tab="tabLogs"><i class="fas fa-history"></i> سجل العمليات</button>
             </div>
 
             <!-- ===== شريط التنقل السفلي للجوال ===== -->
             <div class="bottom-nav">
                 <button class="active" data-tab="tabHome"><i class="fas fa-home"></i><span>الرئيسية</span></button>
                 <button data-tab="tabTrash"><i class="fas fa-trash-alt"></i><span>المحذوفات</span></button>
-                <button data-tab="tabLogs"><i class="fas fa-history"></i><span>السجل</span></button>
             </div>
 
             <!-- ===== التبويب الأول: الرئيسية ===== -->
@@ -938,16 +878,6 @@
                 </div>
             </div>
 
-            <!-- ===== التبويب الثالث: سجل العمليات ===== -->
-            <div id="tabLogs" class="tab-section">
-                <div class="log-list">
-                    <div class="logs-header">
-                        <span class="title"><i class="fas fa-history"></i> سجل العمليات</span>
-                        <button class="clear-logs-btn" id="clearLogsBtn"><i class="fas fa-trash"></i> مسح السجل</button>
-                    </div>
-                    <div id="logsContainer"><div class="skeleton skeleton-text" style="width:80%;margin:20px auto;"></div><div class="skeleton skeleton-text" style="width:60%;margin:8px auto 0;"></div></div>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -1163,57 +1093,6 @@
         }
 
         // ===== سجل العمليات (Audit Log) =====
-        let logsUnsubscribe = null;
-
-        async function logAction(action, details) {
-            try {
-                const user = auth.currentUser;
-                if (!user) return;
-                await setDoc(doc(collection(db, "logs")), {
-                    action: action,
-                    details: details,
-                    email: user.email,
-                    timestamp: Timestamp.fromDate(new Date())
-                });
-            } catch (e) { console.warn('⚠️ فشل تسجيل العملية:', e); }
-        }
-
-        let logsListenerSetup = false;
-
-        function refreshLogsView() {
-            if (logsUnsubscribe) logsUnsubscribe();
-            logsListenerSetup = false;
-            setupLogsListener();
-        }
-
-        function setupLogsListener() {
-            if (logsListenerSetup) return;
-            logsListenerSetup = true;
-            if (logsUnsubscribe) logsUnsubscribe();
-            const logsContainer = document.getElementById('logsContainer');
-            logsUnsubscribe = onSnapshot(
-                query(collection(db, "logs"), orderBy("timestamp", "desc"), limit(100)),
-                (snap) => {
-                    if (!logsContainer) return;
-                    if (snap.docs.length === 0) {
-                        logsContainer.innerHTML = '<p style="padding:30px;text-align:center;color:#a0aec0;"><i class="fas fa-inbox"></i> لا توجد عمليات مسجلة</p>';
-                        return;
-                    }
-                    let html = '';
-                    snap.docs.forEach(d => {
-                        const data = d.data();
-                        const ts = data.timestamp ? (data.timestamp.toDate ? data.timestamp.toDate() : new Date(data.timestamp)) : new Date();
-                        const time = ts.toLocaleString('ar-EG');
-                        const iconMap = { login: 'fas fa-sign-in-alt login', logout: 'fas fa-sign-out-alt logout', delete: 'fas fa-trash-alt delete', restore: 'fas fa-undo restore', export: 'fas fa-file-export export', toggle: 'fas fa-toggle-on toggle' };
-                        const icon = iconMap[data.action] || 'fas fa-circle';
-                        html += `<div class="log-item"><div class="log-icon ${data.action}"><i class="${icon.split(' ')[0]} ${icon.split(' ')[1] || ''}"></i></div><div class="log-info"><div class="log-action">${escapeHTML(data.action === 'login' ? 'تسجيل دخول' : data.action === 'logout' ? 'تسجيل خروج' : data.action === 'delete' ? 'حذف' : data.action === 'restore' ? 'استعادة' : data.action === 'export' ? 'تصدير' : data.action === 'toggle' ? 'تغيير حالة التسجيل' : data.action)}</div><div class="log-details">${escapeHTML(data.details || '')} — ${escapeHTML(data.email || '')}</div></div><div class="log-time">${time}</div></div>`;
-                    });
-                    logsContainer.innerHTML = html;
-                },
-                (err) => { console.warn('⚠️ خطأ في سجل العمليات:', err); }
-            );
-        }
-
         // ===== دوال سلة المحذوفات =====
         async function loadTrash() {
             const tbody = document.getElementById('trashTableBody');
@@ -1269,7 +1148,6 @@
                     }
                 });
                 showToast('✅ تم استعادة الطالب بنجاح.', 'success');
-                logAction('restore', `تم استعادة طالب (${id})`);
                 loadTrash();
                 loadStudents(true);
             } catch (e) { showToast('❌ فشل الاستعادة: ' + e.message, 'error'); }
@@ -1305,7 +1183,6 @@
                 }
                 await deleteDoc(doc(db, "students", id));
                 showToast('✅ تم الحذف النهائي.', 'success');
-                logAction('delete', `حذف نهائي لطالب (${id})`);
                 loadTrash();
                 loadStudents(true);
             } catch (e) { showToast('❌ فشل الحذف النهائي: ' + e.message, 'error'); }
@@ -1326,7 +1203,7 @@
             }
         });
 
-        // ===== دوال التبويب مع إيقاف الـ listeners غير النشطة =====
+        // ===== دوال التبويب =====
         function setupTabs() {
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
@@ -1336,15 +1213,7 @@
                     const tab = document.getElementById(this.dataset.tab);
                     if (tab) {
                         tab.classList.add('active');
-                        if (this.dataset.tab === 'tabTrash') {
-                            loadTrash();
-                            // أوقف listener logs عند مغادرة التبويب
-                            if (logsUnsubscribe) { logsUnsubscribe(); logsUnsubscribe = null; logsListenerSetup = false; }
-                        }
-                        if (this.dataset.tab === 'tabLogs') setupLogsListener();
-                        if (this.dataset.tab === 'tabHome') {
-                            if (logsUnsubscribe) { logsUnsubscribe(); logsUnsubscribe = null; logsListenerSetup = false; }
-                        }
+                        if (this.dataset.tab === 'tabTrash') loadTrash();
                     }
                 });
             });
@@ -1497,8 +1366,6 @@
                 await signInWithEmailAndPassword(auth, email, password);
                 loginError.classList.remove('show');
                 showToast('✅ مرحباً بك في لوحة التحكم.', 'success');
-                logAction('login', 'تسجيل الدخول إلى لوحة التحكم');
-                // onAuthStateChanged يتولى الباقي تلقائياً
             } catch (error) {
                 let msg = '❌ فشل تسجيل الدخول.';
                 if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') msg = '❌ الحساب غير موجود أو كلمة المرور غير صحيحة.';
@@ -1515,11 +1382,9 @@
         }
 
         async function logout() {
-            logAction('logout', 'تسجيل الخروج من لوحة التحكم');
             try { await signOut(auth); } catch (e) {}
             if (statsRefreshInterval) { clearInterval(statsRefreshInterval); statsRefreshInterval = null; }
             if (configRefreshInterval) { clearInterval(configRefreshInterval); configRefreshInterval = null; }
-            if (logsUnsubscribe) { logsUnsubscribe(); logsListenerSetup = false; }
             loginScreen.style.display = 'flex';
             dashboard.style.display = 'none';
             showToast('🔒 تم تسجيل الخروج.', 'info');
@@ -1656,7 +1521,6 @@
                 document.querySelectorAll('#addStudentModal input, #addStudentModal textarea').forEach(el => el.value = '');
                 loadStudents(true);
                 refreshStatsFromFirestore();
-                logAction('add', `إضافة طالب ${name} من لوحة التحكم`);
             } catch (e) {
                 console.error(e);
                 showToast('❌ فشل إضافة الطالب: ' + e.message, 'error');
@@ -2139,91 +2003,11 @@
             setupSearchDebounce();
             setupFilterDebounce();
             setupTabs();
-            setupDarkMode();
             setupTableEventDelegation();
             setupVirtualScroll();
-            if (document.getElementById('clearLogsBtn')._listenerAttached) return;
-            document.getElementById('clearLogsBtn')._listenerAttached = true;
-            document.getElementById('clearLogsBtn').addEventListener('click', async function() {
-                try {
-                    const snap = await getDocs(query(collection(db, "logs"), limit(500)));
-                    if (snap.docs.length === 0) { showToast('📭 لا توجد سجلات لمسحها.', 'info'); return; }
-                    const deletedLogs = snap.docs.map(d => ({ id: d.id, data: d.data() }));
-                    const batch = writeBatch(db);
-                    snap.docs.forEach(d => batch.delete(d.ref));
-                    await batch.commit();
-                    showToast(`✅ تم مسح ${snap.docs.length} سجل.`, 'success', 'تراجع', async () => {
-                        for (const log of deletedLogs) {
-                            await setDoc(doc(db, "logs", log.id), log.data);
-                        }
-                        showToast(`↩️ تمت استعادة ${deletedLogs.length} سجل.`, 'info');
-                        refreshLogsView();
-                    });
-                    refreshLogsView();
-                } catch (e) { showToast('❌ فشل المسح: ' + e.message, 'error'); }
-            });
-
-            // تنظيف تلقائي للسجلات الأقدم من 30 يوماً
-            setTimeout(async () => {
-                try {
-                    const thirtyDaysAgo = Timestamp.fromDate(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000));
-                    const oldLogs = await getDocs(query(collection(db, "logs"), where("timestamp", "<", thirtyDaysAgo), limit(100)));
-                    if (oldLogs.docs.length > 0) {
-                        const batch = writeBatch(db);
-                        oldLogs.docs.forEach(d => batch.delete(d.ref));
-                        await batch.commit();
-                        console.log(`🧹 تم مسح ${oldLogs.docs.length} سجل قديم`);
-                    }
-                } catch (e) { console.warn("⚠️ فشل تنظيف السجلات القديمة:", e); }
-            }, 5000);
         }
 
         function updateStatusBadge(isOpen) {
-            statusBadge.className = `status-badge ${isOpen ? 'open' : 'closed'}`;
-            statusBadge.textContent = isOpen ? 'مفتوح ✅' : 'مغلق ❌';
-        }
-
-        // ===== الوضع الليلي (Dark Mode) مع Auto-detect =====
-        function setupDarkMode() {
-            const toggle = document.getElementById('darkModeToggle');
-            const saved = localStorage.getItem('darkMode');
-            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            const isDark = saved !== null ? saved === 'true' : prefersDark;
-            
-            if (isDark) { 
-                document.documentElement.setAttribute('data-theme', 'dark'); 
-                toggle.innerHTML = '<i class="fas fa-sun"></i>'; 
-            } else {
-                document.documentElement.removeAttribute('data-theme');
-                toggle.innerHTML = '<i class="fas fa-moon"></i>';
-            }
-            
-            toggle.addEventListener('click', () => {
-                const isCurrentlyDark = document.documentElement.getAttribute('data-theme') === 'dark';
-                if (isCurrentlyDark) {
-                    document.documentElement.removeAttribute('data-theme');
-                    localStorage.setItem('darkMode', 'false');
-                    toggle.innerHTML = '<i class="fas fa-moon"></i>';
-                } else {
-                    document.documentElement.setAttribute('data-theme', 'dark');
-                    localStorage.setItem('darkMode', 'true');
-                    toggle.innerHTML = '<i class="fas fa-sun"></i>';
-                }
-            });
-            
-            // Listen for system theme changes
-            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-                if (localStorage.getItem('darkMode') === null) {
-                    if (e.matches) {
-                        document.documentElement.setAttribute('data-theme', 'dark');
-                        toggle.innerHTML = '<i class="fas fa-sun"></i>';
-                    } else {
-                        document.documentElement.removeAttribute('data-theme');
-                        toggle.innerHTML = '<i class="fas fa-moon"></i>';
-                    }
-                }
-            });
-        }
 
         // ===== Virtual Scrolling Setup =====
         let virtualScrollEnabled = false;
@@ -2316,7 +2100,6 @@
                                 loadStudents(true);
                             } catch (e) { showToast('❌ فشل التراجع.', 'error'); }
                         });
-                        logAction('delete', `نقل طالب إلى سلة المحذوفات (${id})`);
                         loadStudents(true);
                     } catch (e) { showToast('❌ فشل الحذف: ' + e.message, 'error'); }
                 }
@@ -2592,7 +2375,6 @@
                 input.value = '';
                 document.getElementById('contactList').innerHTML = renderContactHistory(current);
                 showToast('✅ تم إضافة الملاحظة', 'success');
-                logAction('note', `إضافة ملاحظة للطالب ${escapeHTML(snap.data().fullName || '')}`);
             } catch (e) {
                 showToast('⚠️ فشل في حفظ الملاحظة', 'error');
                 console.error(e);
@@ -2695,7 +2477,6 @@
             try {
                 await updateDoc(doc(db, "students", id), data);
                 showToast('✅ تم حفظ التغييرات بنجاح.', 'success');
-                logAction('edit', `تعديل بيانات الطالب (${id})`);
                 document.getElementById('editModal').classList.remove('show');
                 loadStudents(true);
             } catch (e) {
@@ -2741,8 +2522,7 @@
                         updateStatusBadge(prev);
                         setDoc(doc(db, "config", "settings"), { registrationOpen: prev }, { merge: true });
                         showToast(`↩️ تم التراجع عن ${label} التسجيل.`, 'info');
-                    });
-                    logAction('toggle', `${label} باب التسجيل`); })
+                    }); })
                 .catch((error) => { showToast('❌ فشل تغيير الحالة: ' + error.message, 'error');
                     toggleSwitch.checked = prev; });
         });
@@ -2819,7 +2599,6 @@
                         loadStudents(true);
                     } catch (e) { showToast('❌ فشل التراجع.', 'error'); }
                 });
-                logAction('delete', `نقل ${count} طالب إلى سلة المحذوفات`);
                 loadStudents(true);
             } catch (e) {
                 showToast('❌ فشل الحذف الجماعي: ' + e.message, 'error');
@@ -2975,7 +2754,6 @@
                 }
 
                 showToast(`✅ تم تصدير ${docs.length} طالب بنجاح.`, 'success');
-                logAction('export', `تصدير ${docs.length} طالب (${format.toUpperCase()}) - ${scopeLabel}`);
             } catch (e) { showToast('❌ فشل التصدير: ' + e.message, 'error'); }
         }
 
@@ -3010,7 +2788,6 @@
                 showToast(`✅ تم تغيير حالة ${count} طالب إلى "${newStatus}".`, 'success', 'تراجع', async () => {
                     showToast('⚠️ التراجع عن تغيير الحالة غير متاح للحالات الفردية. يرجى التعديل يدوياً.', 'warning');
                 });
-                logAction('bulkStatus', `تغيير حالة ${count} طالب إلى ${newStatus}`);
                 refreshStatsFromFirestore();
                 loadStudents(true);
             } catch (e) { showToast('❌ فشل تغيير الحالة: ' + e.message, 'error'); }
@@ -3257,7 +3034,6 @@
                 pdf.save(`تقرير_الطلاب_الجميع_${new Date().toISOString().slice(0, 10)}.pdf`);
 
                 showToast(`✅ تم إنشاء ملف PDF لـ ${allDocs.length} طالب.`, 'success');
-                logAction('pdfAll', `إنشاء ملف PDF لجميع الطلاب (${allDocs.length} طالب)`);
 
             } catch (e) {
                 showToast('❌ فشل إنشاء ملف PDF: ' + e.message, 'error');
