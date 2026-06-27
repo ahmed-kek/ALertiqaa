@@ -1895,8 +1895,6 @@
                 totalDocs = docs.length;
                 renderTable(docs);
                 updatePagination(docs.length);
-
-                refreshNameCache();
             } catch (error) {
                 console.error(error);
                 studentsBody.innerHTML = `<tr><td colspan="10" class="empty-msg"><i class="fas fa-exclamation-triangle"></i> خطأ في التحميل: ${error.message}</td></tr>`;
@@ -1961,7 +1959,7 @@
                         });
                         const existingMap = new Map(studentCache.map(s => [s.id, s]));
                         changedMap.forEach((v, k) => existingMap.set(k, v));
-                        studentCache = Array.from(existingMap.values()).slice(0, 300);
+                        studentCache = Array.from(existingMap.values()).slice(0, 500);
                     }
                 }
 
@@ -1972,6 +1970,26 @@
         }
 
         function renderTable(docs) {
+            // بناء كاش البحث من نفس البيانات (تجنب قراءة مضاعفة)
+            if (docs.length > 0) {
+                studentCache = docs.map(d => {
+                    const dd = d.data();
+                    return {
+                        id: d.id,
+                        name: dd.fullName || '',
+                        grade: dd.grade || '',
+                        gender: dd.gender || '',
+                        parentName: dd.parentName || '',
+                        phone: dd.phone || '',
+                        status: dd.status || 'جديد',
+                        registeredAt: dd.registeredAt ? dd.registeredAt.toMillis() : null,
+                        modifiedAt: dd.modifiedAt || null
+                    };
+                }).slice(0, 500);
+                localStorage.setItem('studentCacheMeta_v1', JSON.stringify({ lastUpdate: Date.now() }));
+                saveStudentNameCache();
+                buildFuseIndex();
+            }
             // ترتيب Client-side
             if (sortField) {
                 docs = [...docs].sort((a, b) => {

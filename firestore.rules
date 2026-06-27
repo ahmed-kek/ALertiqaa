@@ -26,6 +26,21 @@ service cloud.firestore {
         d.registeredAt == request.time;
     }
 
+    function isValidPhoneReg() {
+      let d = request.resource.data;
+      return (!d.names || (d.names is list && d.names.size() <= 50)) &&
+             (!d.count || (d.count is number && d.count >= 0 && d.count <= 100));
+    }
+
+    function isValidStatsWrite() {
+      let d = request.resource.data;
+      // السماح بالكتابة للإحصاءات مع التحقق من صحة البيانات
+      return (d.total is number && d.total >= 0 && d.total <= 1000000) &&
+             (d.male is number && d.male >= 0) &&
+             (d.female is number && d.female >= 0) &&
+             (!d.deletedCount || (d.deletedCount is number && d.deletedCount >= 0));
+    }
+
     match /students/{studentId} {
       allow read, update, delete: if isAdmin();
       allow create: if isPortalOpen() && isValidStudentForm();
@@ -39,13 +54,12 @@ service cloud.firestore {
 
     match /config/stats {
       allow read: if true;
-      allow write: if true;
+      allow write: if isAdmin() || (request.resource.data.size() <= 12 && isValidStatsWrite());
     }
-
 
     match /config/phoneRegistry/{phone} {
       allow read: if true;
-      allow write: if true;
+      allow write: if isAdmin() || isValidPhoneReg();
     }
 
     match /logs/{logId} {

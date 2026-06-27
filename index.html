@@ -1047,7 +1047,7 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label for="fullName"><i class="fas fa-user"></i> الاسم الكامل <span class="required">*</span></label>
-                            <input type="text" id="fullName" autocomplete="name" placeholder="مثال: أحمد محمد علي" required aria-required="true">
+                            <input type="text" id="fullName" maxlength="120" autocomplete="name" placeholder="مثال: أحمد محمد علي" required aria-required="true">
                             <span class="valid-icon"><i class="fas fa-check-circle"></i></span>
                             <div class="field-error" id="fullNameError"><i class="fas fa-exclamation-circle"></i> الاسم يجب أن يكون 3 أحرف عربية على الأقل</div>
                         </div>
@@ -1106,13 +1106,13 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label for="parentName"><i class="fas fa-user-tie"></i> اسم ولي الأمر <span class="required">*</span></label>
-                            <input type="text" id="parentName" placeholder="اسم الأب أو الوصي" required aria-required="true">
+                            <input type="text" id="parentName" maxlength="100" placeholder="اسم الأب أو الوصي" required aria-required="true">
                             <span class="valid-icon"><i class="fas fa-check-circle"></i></span>
                             <div class="field-error" id="parentNameError"><i class="fas fa-exclamation-circle"></i> مطلوب</div>
                         </div>
                         <div class="form-group">
                             <label for="parentJob"><i class="fas fa-briefcase"></i> جهة العمل / الوظيفة <span class="required">*</span></label>
-                            <input type="text" id="parentJob" placeholder="مثال: موظف حكومي - وزارة التربية" required aria-required="true">
+                            <input type="text" id="parentJob" maxlength="100" placeholder="مثال: موظف حكومي - وزارة التربية" required aria-required="true">
                             <span class="valid-icon"><i class="fas fa-check-circle"></i></span>
                             <div class="field-error" id="parentJobError"><i class="fas fa-exclamation-circle"></i> مطلوب</div>
                         </div>
@@ -1120,13 +1120,13 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label for="phone"><i class="fas fa-phone-alt"></i> رقم الجوال <span class="required">*</span></label>
-                            <input type="tel" id="phone" autocomplete="tel" placeholder="مثال: 07850009133" required aria-required="true" dir="ltr">
+                            <input type="tel" id="phone" maxlength="20" autocomplete="tel" placeholder="مثال: 07850009133" required aria-required="true" dir="ltr">
                             <span class="valid-icon"><i class="fas fa-check-circle"></i></span>
                             <div class="field-error" id="phoneError"><i class="fas fa-exclamation-circle"></i> أدخل رقم هاتف عراقي صحيح مكون من 11 رقماً (مثال: 07850009133)</div>
                         </div>
                         <div class="form-group">
                             <label for="address"><i class="fas fa-home"></i> العنوان (المنزل) <span class="required">*</span></label>
-                            <input type="text" id="address" placeholder="الحي / المدينة" required aria-required="true">
+                            <input type="text" id="address" maxlength="200" placeholder="الحي / المدينة" required aria-required="true">
                             <span class="valid-icon"><i class="fas fa-check-circle"></i></span>
                             <div class="field-error" id="addressError"><i class="fas fa-exclamation-circle"></i> مطلوب</div>
                         </div>
@@ -1162,7 +1162,7 @@
                     <p>شكراً لتسجيلكم في مدارس الأرتقاء الأهلية.</p>
                     <p>شكراً لتسجيلكم في مدارس الأرتقاء الأهلية. يرجى الضغط أدناه لتأكيد طلبكم عبر واتساب الإدارة فوراً.</p>
                     <div style="display:flex; flex-direction:column; gap:10px; align-items:center;">
-                        <a id="whatsappLink" href="#" target="_blank" class="btn-whatsapp">
+                        <a id="whatsappLink" href="#" target="_blank" rel="noopener noreferrer" class="btn-whatsapp">
                             <i class="fab fa-whatsapp"></i> تأكيد التسجيل عبر واتساب الإدارة
                         </a>
                         <button type="button" id="regSiblingBtn" class="btn-sibling">
@@ -1285,7 +1285,7 @@
                 if (!sSnap.exists()) {
                     await setDoc(settingsRef, { registrationOpen: true, currentAcademicYear: "2026-2027" });
                 }
-            } catch (e) { /* أول مرة فقط */ }
+            } catch (e) { console.warn("⚠️ فشل تهيئة العدادات:", e); }
         }
         initCounter();
 
@@ -1759,7 +1759,6 @@
                 const dobVal = document.getElementById('dob').value;
                 const age = calcAge(dobVal);
                 const studentData = {
-                    name: sName,
                     fullName: sName,
                     age: age,
                     deleted: false,
