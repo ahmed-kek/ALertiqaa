@@ -230,7 +230,6 @@
             .unified-toolbar .filters-row { flex-direction: column; align-items: stretch; }
             .unified-toolbar .actions-row { justify-content: center; }
             .unified-toolbar .toolbar-select { font-size: 11px; padding: 6px 8px; }
-            .unified-toolbar .toolbar-date { font-size: 11px; padding: 6px 8px; }
             .unified-toolbar .actions-row button { font-size: 11px; padding: 6px 10px; }
         }
         /* ===== قسم التحكم ===== */
@@ -261,13 +260,6 @@
         .status-badge.closed { background: #fed7d7; color: #742a2a; }
 
         /* ===== الفلاتر (في الشريط الموحد) ===== */
-        .unified-toolbar .toolbar-date {
-            padding: 7px 10px; border: 2px solid var(--border); border-radius: 10px;
-            font-family: var(--font); font-size: 13px; font-weight: 600;
-            background: var(--bg-card); color: var(--text-primary); min-width: 0;
-            transition: var(--transition);
-        }
-        .unified-toolbar .toolbar-date:focus { border-color: var(--primary); outline: none; }
         .unified-toolbar .clear-btn {
             padding: 7px 10px; background: #e2e8f0; border: 2px solid #cbd5e1;
             border-radius: 10px; font-weight: 700; cursor: pointer; align-self: flex-end;
@@ -823,6 +815,7 @@
                 </div>
 
                 <div class="unified-toolbar" id="unifiedToolbar">
+                    <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;"><i class="fas fa-sliders-h" style="color:var(--accent);font-size:14px;"></i><span style="font-weight:700;font-size:13px;color:var(--text-secondary);">فلترة وإدارة</span></div>
                     <div class="toolbar-row filters-row">
                         <div class="filter-wrapper"><label>الصف</label><select id="toolbarGrade" class="toolbar-select">
                             <option value="">الكل</option>
@@ -843,16 +836,17 @@
                             <option value="14">14</option><option value="15">15</option><option value="16">16</option>
                             <option value="17">17</option><option value="18">18</option>
                         </select></div>
+                        <div class="filter-wrapper"><label>سنة الميلاد</label><select id="filterBirthYear" class="toolbar-select">
+                            <option value="">الكل</option>
+                        </select></div>
                         <div class="filter-wrapper"><label>الحالة</label><select id="filterStatus" class="toolbar-select">
                             <option value="">الكل</option><option value="جديد">جديد</option>
                             <option value="تم الاتصال">تم الاتصال</option><option value="مؤكد">مؤكد</option>
                             <option value="منسحب">منسحب</option><option value="ملغي">ملغي</option>
                         </select></div>
-                        <div class="filter-wrapper"><label>السنة</label><select id="filterAcademicYear" class="toolbar-select">
+                        <div class="filter-wrapper"><label>السنة الدراسية</label><select id="filterAcademicYear" class="toolbar-select">
                             <option value="">الكل</option><option value="2026-2027">2026-2027</option>
                         </select></div>
-                        <div class="filter-wrapper"><label>من</label><input type="date" id="filterDateFrom" class="toolbar-date"></div>
-                        <div class="filter-wrapper"><label>إلى</label><input type="date" id="filterDateTo" class="toolbar-date"></div>
                         <div class="search-box" style="flex:1;min-width:140px;"><i class="fas fa-search"></i><input type="text" id="searchInput" placeholder="ابحث بالاسم..." title="أدخل أول حرفين من اسم الطالب للبحث" style="padding:7px 12px 7px 34px;border:2px solid var(--border);border-radius:10px;font-family:var(--font);font-size:13px;width:100%;background:var(--bg-card);color:var(--text-primary);"></div>
                         <button class="clear-btn" id="clearFiltersBtn" title="إعادة ضبط جميع الفلاتر"><i class="fas fa-undo"></i></button>
                     </div>
@@ -1296,8 +1290,6 @@
         const toolbarGender = document.getElementById('toolbarGender');
         const filterAcademicYear = document.getElementById('filterAcademicYear');
         const filterStatus = document.getElementById('filterStatus');
-        const filterDateFrom = document.getElementById('filterDateFrom');
-        const filterDateTo = document.getElementById('filterDateTo');
         const clearFiltersBtn = document.getElementById('clearFiltersBtn');
         const prevPageBtn = document.getElementById('prevPageBtn');
         const nextPageBtn = document.getElementById('nextPageBtn');
@@ -1629,14 +1621,6 @@
             if (grade) constraints.push(where("grade", "==", grade));
             if (gender) constraints.push(where("gender", "==", gender));
             // age يُصفى لاحقاً client-side (تجنباً للـ composite index)
-            const dateFrom = filterDateFrom.value;
-            const dateTo = filterDateTo.value;
-            if (dateFrom) constraints.push(where("registeredAt", ">=", new Date(dateFrom)));
-            if (dateTo) {
-                const end = new Date(dateTo);
-                end.setDate(end.getDate() + 1);
-                constraints.push(where("registeredAt", "<", end));
-            }
 
             if (!isLocalSearch) {
                 constraints.push(orderBy("registeredAt", "desc"));
@@ -1837,6 +1821,11 @@
             if (ageFilter) {
                 activeDocs = activeDocs.filter(d => d.data().age === Number(ageFilter));
             }
+            // تصفية سنة الميلاد client-side
+            const birthYearFilter = document.getElementById('filterBirthYear')?.value;
+            if (birthYearFilter) {
+                activeDocs = activeDocs.filter(d => d.data().dob && d.data().dob.startsWith(birthYearFilter));
+            }
             // تتبع المعرفات الظاهرة (للأزرار الجماعية)
             visibleStudentIds = activeDocs.map(d => d.id);
             if (activeDocs.length === 0 && docs.length > 0) {
@@ -1955,7 +1944,7 @@
         }
 
         function setupFilterDebounce() {
-            const filters = [toolbarGrade, toolbarGender, filterAcademicYear, filterStatus, filterDateFrom, filterDateTo];
+            const filters = [toolbarGrade, toolbarGender, filterAcademicYear, filterStatus];
             filters.forEach(filter => {
                 if (!filter) return;
                 filter.addEventListener('change', () => {
@@ -1971,7 +1960,7 @@
 
         // ===== فلاتر شريط الأدوات (الصف، الجنس، العمر) =====
         function setupToolbarFilters() {
-            ['toolbarGrade', 'toolbarGender', 'toolbarAge'].forEach(id => {
+            ['toolbarGrade', 'toolbarGender', 'toolbarAge', 'filterBirthYear'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
                     el.addEventListener('change', () => {
@@ -2053,6 +2042,17 @@
                 if (updatedSnap.exists()) applyStatsToUI(updatedSnap.data());
             } catch (e) { console.warn("⚠️ فشل التصحيح الأولي للإحصائيات:", e); }
         }
+        function populateBirthYearFilter() {
+            const sel = document.getElementById('filterBirthYear');
+            if (!sel) return;
+            const currentYear = new Date().getFullYear();
+            for (let y = currentYear - 5; y >= currentYear - 25; y--) {
+                const opt = document.createElement('option');
+                opt.value = String(y);
+                opt.textContent = String(y);
+                sel.appendChild(opt);
+            }
+        }
         function loadDashboardData() {
             if ('Notification' in window && Notification.permission === 'default') {
                 Notification.requestPermission();
@@ -2060,6 +2060,7 @@
             loadStudentNameCache();
             setupStatsCaching();
             setupConfigCaching();
+            populateBirthYearFilter();
             loadStudents(true);
             if (!_statsRecalculated) recalcStatsOnce();
             setupSearchDebounce();
@@ -2644,10 +2645,9 @@
             toolbarGrade.value = '';
             toolbarGender.value = '';
             document.getElementById('toolbarAge').value = '';
+            document.getElementById('filterBirthYear').value = '';
             filterAcademicYear.value = '';
             filterStatus.value = '';
-            filterDateFrom.value = '';
-            filterDateTo.value = '';
             currentPage = 0;
             lastVisible = null;
             loadStudents(true);
@@ -2749,14 +2749,8 @@
         });
 
         // ===== دالة مساعدة لجلب الطلاب بالكامل مع pagination (محسّنة) =====
-        async function fetchAllStudents(dateFrom = null, dateTo = null) {
+        async function fetchAllStudents() {
             const constraints = [where("deleted", "==", false)];
-            if (dateFrom) constraints.push(where("registeredAt", ">=", dateFrom));
-            if (dateTo) {
-                const end = new Date(dateTo);
-                end.setDate(end.getDate() + 1);
-                constraints.push(where("registeredAt", "<", end));
-            }
             const countSnap = await getCountFromServer(query(collection(db, "students"), ...constraints));
             const total = countSnap.data().count;
             if (total === 0) return [];
@@ -2791,9 +2785,7 @@
                 const docSnaps = await Promise.all(docPromises);
                 return docSnaps.filter(snap => snap.exists());
             } else {
-                const dateFrom = filterDateFrom.value || null;
-                const dateTo = filterDateTo.value || null;
-                return await fetchAllStudents(dateFrom, dateTo);
+                return await fetchAllStudents();
             }
         }
 
