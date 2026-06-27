@@ -467,7 +467,7 @@
         .modal-box .detail-row .key { font-weight: 700; color: var(--text-secondary); min-width: 35%; }
         .modal-box .detail-row .value { color: var(--text-primary); font-weight: 600; text-align: left; max-width: 60%; word-break: break-word; }
         .contact-history { border-top: 1px solid var(--border); margin-top: 10px; }
-        .contact-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border-light); flex-wrap: wrap; }
+        .contact-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border-light); flex-wrap: wrap; position: relative; }
         .contact-item:last-child { border-bottom: none; }
         .contact-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; white-space: nowrap; }
         .contact-badge.اتصال { background: #dbeafe; color: #1e40af; }
@@ -477,6 +477,27 @@
         .contact-text { flex: 1; font-size: 15px; color: var(--text-primary); min-width: 100px; }
         .contact-time { font-size: 12px; color: var(--text-secondary); font-weight: 600; white-space: nowrap; }
         .contact-input-row { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+        .contact-actions { display: flex; gap: 6px; flex-shrink: 0; }
+        .contact-actions button {
+            background: none; border: none; cursor: pointer; padding: 4px 8px;
+            border-radius: 8px; font-size: 14px; transition: var(--transition);
+        }
+        .contact-actions .edit-contact-btn { color: #2563eb; }
+        .contact-actions .edit-contact-btn:hover { background: #dbeafe; }
+        .contact-actions .del-contact-btn { color: #dc3545; }
+        .contact-actions .del-contact-btn:hover { background: #fee2e2; }
+        .add-contact-btn {
+            padding: 10px 22px; background: var(--primary) !important;
+            color: #fff !important; border: none; border-radius: 12px;
+            font-weight: 800 !important; font-family: var(--font);
+            cursor: pointer; font-size: 15px !important;
+            box-shadow: 0 2px 8px rgba(13,107,92,0.2);
+            transition: var(--transition);
+        }
+        .add-contact-btn:hover { background: var(--primary-dark) !important; transform: translateY(-1px); }
+        .add-contact-btn.editing { background: var(--info-dark) !important; box-shadow: 0 2px 8px rgba(37,99,235,0.2); }
+        .add-contact-btn.editing:hover { background: #1e40af !important; }
+        .contact-item .contact-text { font-weight: 600; }
 
         /* ===== أزرار المودال ===== */
         .modal-actions-bar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
@@ -2369,17 +2390,17 @@
             contactDiv.innerHTML = `
                 <h4 style="margin:20px 0 10px;font-size:16px;color:var(--primary-dark);border-right:3px solid var(--accent);padding-right:12px;"><i class="fas fa-comments" style="color:var(--accent);margin-left:8px;"></i> سجل التواصل</h4>
                 <div class="contact-list" id="contactList">
-                    ${renderContactHistory(student.contactHistory || [])}
+                    ${renderContactHistory(student.contactHistory || [], student.id)}
                 </div>
                 <div class="contact-input-row">
-                    <input type="text" id="contactNoteInput" placeholder="أضف ملاحظة تواصل جديدة..." style="flex:1;padding:10px 14px;border:2px solid var(--border);border-radius:12px;font-family:var(--font);font-size:14px;">
-                    <select id="contactTypeSelect" style="padding:10px 14px;border:2px solid var(--border);border-radius:12px;font-family:var(--font);font-size:14px;background:var(--bg);">
+                    <input type="text" id="contactNoteInput" placeholder="أضف ملاحظة تواصل جديدة..." style="flex:1;padding:12px 14px;border:2px solid var(--border);border-radius:12px;font-family:var(--font);font-size:15px;font-weight:600;background:var(--bg-card);color:var(--text-primary);">
+                    <select id="contactTypeSelect" style="padding:12px 14px;border:2px solid var(--border);border-radius:12px;font-family:var(--font);font-size:15px;font-weight:600;background:var(--bg-card);color:var(--text-primary);">
                         <option value="اتصال">اتصال</option>
                         <option value="واتساب">واتساب</option>
                         <option value="زيارة">زيارة</option>
                         <option value="ملاحظة">ملاحظة</option>
                     </select>
-                    <button class="add-contact-btn" data-student-id="${student.id}" style="padding:10px 20px;background:var(--primary);color:#fff;border:none;border-radius:12px;font-weight:700;font-family:var(--font);cursor:pointer;"><i class="fas fa-plus"></i> إضافة</button>
+                    <button class="add-contact-btn" id="addContactBtn" data-student-id="${student.id}" title="إضافة ملاحظة تواصل جديدة"><i class="fas fa-plus"></i> إضافة ملاحظة</button>
                 </div>
             `;
             content.appendChild(contactDiv);
@@ -2411,18 +2432,22 @@
             document.getElementById('detailModal').classList.add('show');
         }
 
-        function renderContactHistory(history) {
-            if (!history || history.length === 0) return '<p style="color:var(--text-muted);font-size:14px;padding:10px 0;"><i class="fas fa-info-circle"></i> لا توجد ملاحظات سابقة</p>';
+        function renderContactHistory(history, studentId) {
+            if (!history || history.length === 0) return '<p style="color:#475569;font-size:15px;padding:12px 0;font-weight:600;"><i class="fas fa-info-circle"></i> لا توجد ملاحظات سابقة</p>';
             return history.slice().reverse().map(h => `
                 <div class="contact-item">
                     <span class="contact-badge ${h.type}">${h.type}</span>
                     <span class="contact-text">${escapeHTML(h.note)}</span>
                     <span class="contact-time">${new Date(h.at).toLocaleString('ar-EG')}</span>
+                    <div class="contact-actions">
+                        <button class="edit-contact-btn" data-student-id="${studentId}" data-note-at="${h.at}" title="تعديل هذه الملاحظة"><i class="fas fa-edit"></i></button>
+                        <button class="del-contact-btn" data-student-id="${studentId}" data-note-at="${h.at}" title="حذف هذه الملاحظة"><i class="fas fa-trash-alt"></i></button>
+                    </div>
                 </div>
             `).join('');
         }
 
-        // ===== إضافة ملاحظة تواصل (استماع على الـ modal) =====
+        // ===== إدارة سجل التواصل (استماع على الـ modal) =====
         document.getElementById('detailModal').addEventListener('click', async function(e) {
             // ===== قوالب واتساب (تفويض) =====
             const waBtn = e.target.closest('.btn-wa-action');
@@ -2439,23 +2464,78 @@
                 }
                 return;
             }
-            // ===== إضافة ملاحظة اتصال =====
+            const input = document.getElementById('contactNoteInput');
+            const typeSel = document.getElementById('contactTypeSelect');
+            const addBtn = document.getElementById('addContactBtn');
+            // ===== حذف ملاحظة اتصال =====
+            const delBtn = e.target.closest('.del-contact-btn');
+            if (delBtn) {
+                e.stopPropagation();
+                const studentId = delBtn.dataset.studentId;
+                const noteAt = delBtn.dataset.noteAt;
+                if (!confirm('⚠️ هل أنت متأكد من حذف هذه الملاحظة؟')) return;
+                try {
+                    const snap = await getDoc(doc(db, 'students', studentId));
+                    if (!snap.exists()) { showToast('⚠️ الطالب غير موجود', 'error'); return; }
+                    let current = snap.data().contactHistory || [];
+                    current = current.filter(h => h.at !== noteAt);
+                    await updateDoc(doc(db, 'students', studentId), { contactHistory: current, modifiedAt: serverTimestamp() });
+                    document.getElementById('contactList').innerHTML = renderContactHistory(current, studentId);
+                    showToast('✅ تم حذف الملاحظة', 'success');
+                } catch (e) {
+                    showToast('⚠️ فشل في حذف الملاحظة', 'error');
+                    console.error(e);
+                }
+                return;
+            }
+            // ===== تعديل ملاحظة اتصال =====
+            const editBtn = e.target.closest('.edit-contact-btn');
+            if (editBtn) {
+                e.stopPropagation();
+                const studentId = editBtn.dataset.studentId;
+                const noteAt = editBtn.dataset.noteAt;
+                const snap = await getDoc(doc(db, 'students', studentId));
+                if (!snap.exists()) { showToast('⚠️ الطالب غير موجود', 'error'); return; }
+                const current = snap.data().contactHistory || [];
+                const note = current.find(h => h.at === noteAt);
+                if (!note) { showToast('⚠️ الملاحظة غير موجودة', 'error'); return; }
+                input.value = note.note;
+                typeSel.value = note.type;
+                addBtn.textContent = 'تحديث الملاحظة';
+                addBtn.classList.add('editing');
+                addBtn.dataset.editAt = noteAt;
+                addBtn.dataset.studentId = studentId;
+                input.focus();
+                return;
+            }
+            // ===== إضافة/تحديث ملاحظة اتصال =====
             const btn = e.target.closest('.add-contact-btn');
             if (!btn) return;
             const studentId = btn.dataset.studentId;
-            const input = document.getElementById('contactNoteInput');
-            const type = document.getElementById('contactTypeSelect').value;
             const note = input.value.trim();
             if (!note) { showToast('⚠️ اكتب نص الملاحظة أولاً', 'warning'); return; }
             try {
                 const snap = await getDoc(doc(db, 'students', studentId));
                 if (!snap.exists()) { showToast('⚠️ الطالب غير موجود', 'error'); return; }
-                const current = snap.data().contactHistory || [];
-                current.push({ note, type, at: new Date().toISOString() });
+                let current = snap.data().contactHistory || [];
+                const editAt = btn.dataset.editAt;
+                if (editAt) {
+                    // تحديث ملاحظة موجودة
+                    const idx = current.findIndex(h => h.at === editAt);
+                    if (idx === -1) { showToast('⚠️ الملاحظة غير موجودة', 'error'); return; }
+                    current[idx] = { note, type: typeSel.value, at: editAt };
+                } else {
+                    // إضافة ملاحظة جديدة
+                    current.push({ note, type: typeSel.value, at: new Date().toISOString() });
+                }
                 await updateDoc(doc(db, 'students', studentId), { contactHistory: current, modifiedAt: serverTimestamp() });
                 input.value = '';
-                document.getElementById('contactList').innerHTML = renderContactHistory(current);
-                showToast('✅ تم إضافة الملاحظة', 'success');
+                typeSel.value = 'اتصال';
+                addBtn.textContent = 'إضافة ملاحظة';
+                addBtn.classList.remove('editing');
+                delete addBtn.dataset.editAt;
+                document.getElementById('contactList').innerHTML = renderContactHistory(current, studentId);
+                showToast(editAt ? '✅ تم تحديث الملاحظة' : '✅ تم إضافة الملاحظة', 'success');
             } catch (e) {
                 showToast('⚠️ فشل في حفظ الملاحظة', 'error');
                 console.error(e);
