@@ -98,6 +98,9 @@
             min-height: 100vh;
             padding: 20px;
             transition: background var(--transition), color var(--transition);
+            font-size: 16px;
+            line-height: 1.7;
+            -webkit-font-smoothing: antialiased;
         }
         .container { max-width: 1300px; margin: 0 auto; }
 
@@ -304,9 +307,9 @@
             overflow: hidden; box-shadow: var(--shadow-sm);
             overflow-x: auto; margin-bottom: 20px;
         }
-        .table-wrapper table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 800px; }
+        .table-wrapper table { width: 100%; border-collapse: collapse; font-size: 15px; min-width: 800px; line-height: 1.6; }
         .table-wrapper thead { background: var(--primary-dark); color: #fff; }
-        .table-wrapper thead th { padding: 14px 12px; text-align: center; white-space: nowrap; font-weight: 700; }
+        .table-wrapper thead th { padding: 16px 12px; text-align: center; white-space: nowrap; font-weight: 800; font-size: 15px; }
         .sortable { cursor: pointer; user-select: none; transition: background 0.2s ease; }
         .sortable:hover { background: rgba(255,255,255,0.1); }
         .sortable .sort-icon { font-size: 11px; margin-right: 5px; opacity: 0.4; transition: opacity 0.2s ease; }
@@ -314,9 +317,10 @@
         .sortable .sort-icon.asc { opacity: 1; color: #fbbf24; }
         .sortable .sort-icon.desc { opacity: 1; color: #fbbf24; transform: rotate(180deg); }
         .table-wrapper tbody td {
-            padding: 12px; text-align: center;
+            padding: 14px 12px; text-align: center;
             border-bottom: 1px solid var(--border-light);
             color: var(--text-primary); vertical-align: middle;
+            font-size: 15px; line-height: 1.6;
         }
         .table-wrapper tbody tr:hover { background: var(--bg); }
         .table-wrapper tbody .empty-msg {
@@ -330,8 +334,8 @@
             display: flex; align-items: center; justify-content: center;
             margin: 0 auto 16px; opacity: 0.7;
         }
-        .badge-grade { background: var(--border); padding: 3px 14px; border-radius: 30px; font-size: 12px; font-weight: 600; color: var(--text-secondary); display: inline-block; }
-        .badge-status { padding: 2px 12px; border-radius: 30px; font-size: 12px; font-weight: 700; display: inline-block; white-space: nowrap; }
+        .badge-grade { background: var(--border); padding: 5px 16px; border-radius: 30px; font-size: 13px; font-weight: 700; color: var(--text-secondary); display: inline-block; }
+        .badge-status { padding: 4px 16px; border-radius: 30px; font-size: 13px; font-weight: 700; display: inline-block; white-space: nowrap; }
         .badge-status { cursor: pointer; transition: transform 0.2s ease; }
         .badge-status:hover { transform: scale(1.1); }
         .badge-status.new { background: #dbeafe; color: #1e40af; }
@@ -339,10 +343,10 @@
         .badge-status.confirmed { background: #d1fae5; color: #065f46; }
         .badge-status.withdrawn { background: #fce7f3; color: #9d174d; }
         .badge-status.cancelled { background: #fee2e2; color: #991b1b; }
-        .action-btns { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+        .action-btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
         .action-btns button {
-            border: none; padding: 6px 14px; border-radius: 10px;
-            font-weight: 600; cursor: pointer; font-size: 13px;
+            border: none; padding: 8px 18px; border-radius: 12px;
+            font-weight: 700; cursor: pointer; font-size: 14px;
             font-family: var(--font); transition: var(--transition);
         }
         .btn-view { background: #bee3f8; color: #2a69ac; }
@@ -454,11 +458,12 @@
         .modal-box .close-modal:hover { color: var(--danger); }
         .modal-box h2 { color: var(--primary-dark); margin-bottom: 20px; border-right: 4px solid var(--accent); padding-right: 15px; }
         .modal-box .detail-row {
-            display: flex; justify-content: space-between; padding: 10px 0;
-            border-bottom: 1px solid var(--border-light); font-size: 15px;
+            display: flex; justify-content: space-between; padding: 14px 0;
+            border-bottom: 1px solid var(--border-light); font-size: 16px;
+            line-height: 1.7;
         }
-        .modal-box .detail-row .key { font-weight: 600; color: var(--text-secondary); min-width: 35%; }
-        .modal-box .detail-row .value { color: var(--text-primary); font-weight: 500; text-align: left; max-width: 60%; word-break: break-word; }
+        .modal-box .detail-row .key { font-weight: 700; color: var(--text-secondary); min-width: 35%; }
+        .modal-box .detail-row .value { color: var(--text-primary); font-weight: 600; text-align: left; max-width: 60%; word-break: break-word; }
         .contact-history { border-top: 1px solid var(--border); margin-top: 10px; }
         .contact-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border-light); flex-wrap: wrap; }
         .contact-item:last-child { border-bottom: none; }
@@ -467,14 +472,21 @@
         .contact-badge.واتساب { background: #d1fae5; color: #065f46; }
         .contact-badge.زيارة { background: #fef3c7; color: #92400e; }
         .contact-badge.ملاحظة { background: #e2e8f0; color: #475569; }
-        .contact-text { flex: 1; font-size: 14px; color: var(--text-primary); min-width: 100px; }
-        .contact-time { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+        .contact-text { flex: 1; font-size: 15px; color: var(--text-primary); min-width: 100px; }
+        .contact-time { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
         .contact-input-row { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
 
         /* ===== أزرار المودال ===== */
         .modal-actions-bar { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-        .wa-template-btn { background: #25d366 !important; font-size: 16px !important; min-width: 42px; justify-content: center; }
-        .wa-template-btn:hover { background: #20ba5a !important; }
+        .btn-wa-action {
+            font-size: 14px !important; padding: 10px 18px !important;
+            justify-content: center; gap: 6px; min-width: 120px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        .btn-wa-action:hover { filter: brightness(1.1); transform: translateY(-1px); }
+        .btn-wa-action[data-template="approved"]:hover { background: #238a5e !important; }
+        .btn-wa-action[data-template="interview"]:hover { background: #1d4ed8 !important; }
+        .btn-wa-action[data-template="rejected"]:hover { background: #b91c1c !important; }
         .btn-print-report, .btn-pdf-report {
             padding: 8px 20px; color: #fff; border: none; border-radius: var(--radius-sm);
             cursor: pointer; font-family: var(--font); font-weight: 700;
@@ -617,8 +629,8 @@
         .stat-card.female::before { background: #d53f8c; }
         .stat-card.today::before { background: #4299e1; }
         .stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
-        .stat-card .stat-info h3 { font-size: 13px; color: var(--text-secondary); margin: 0 0 4px; font-weight: 600; }
-        .stat-card .stat-info p { font-size: 32px; font-weight: 800; color: var(--text-primary); margin: 0; line-height: 1.2; }
+        .stat-card .stat-info h3 { font-size: 14px; color: var(--text-secondary); margin: 0 0 4px; font-weight: 700; }
+        .stat-card .stat-info p { font-size: 34px; font-weight: 800; color: var(--text-primary); margin: 0; line-height: 1.2; }
         .stat-card .stat-icon { font-size: 36px; color: var(--text-muted); opacity: 0.3; }
 
         /* ===== CSS Containment لتسريع الجدول ===== */
@@ -927,9 +939,9 @@
                     <button class="btn-print-report" onclick="printStudentReport()"><i class="fas fa-print"></i> طباعة</button>
                     <button class="btn-pdf-report" onclick="saveAsPDF()"><i class="fas fa-file-pdf"></i> PDF</button>
                     <button class="btn-print-report" id="whatsappContactBtn" style="background:#25d366;"><i class="fab fa-whatsapp"></i> واتساب</button>
-                    <button class="btn-print-report wa-template-btn" data-template="welcome" title="رسالة ترحيب"><i class="fas fa-hand-peace" style="margin-left:0;"></i></button>
-                    <button class="btn-print-report wa-template-btn" data-template="followup" title="متابعة"><i class="fas fa-redo" style="margin-left:0;"></i></button>
-                    <button class="btn-print-report wa-template-btn" data-template="approved" title="قبول"><i class="fas fa-check-circle" style="margin-left:0;color:#2d9d6e;"></i></button>
+                    <button class="btn-print-report btn-wa-action" data-template="approved" style="background:#2d9d6e;" title="إرسال رسالة قبول للطالب"><i class="fas fa-check-circle"></i> ✅ قبول</button>
+                    <button class="btn-print-report btn-wa-action" data-template="interview" style="background:#2563eb;" title="دعوة الطالب للمقابلة"><i class="fas fa-handshake"></i> 🎯 دعوة للمقابلة</button>
+                    <button class="btn-print-report btn-wa-action" data-template="rejected" style="background:#dc3545;" title="إرسال اعتذار للطالب"><i class="fas fa-times-circle"></i> ❌ عدم القبول</button>
                 </div>
                 <div id="detailContent"></div>
             </div>
@@ -2386,9 +2398,9 @@
 
             // قوالب واتساب مع تفويض الأحداث
             const waTemplates = {
-                welcome: `السلام عليكم ورحمة الله وبركاته\n\nعائلة الطالب (${escapeHTML(student.fullName)}) المحترمة،\n\nنشكركم على تسجيلكم في مدارس الأرتقاء الأهلية للعام الدراسي ${escapeHTML(student.academicYear || 'الحالي')}. رقم تسجيلكم: ${student.registrationId || 'غير محدد'}.\nسيتم التواصل معكم قريباً لتأكيد القبول.\n\nمع فائق الاحترام،\nإدارة مدارس الأرتقاء الأهلية`,
-                followup: `السلام عليكم\n\nإدارة مدارس الأرتقاء تتابع طلب تسجيل الطالب (${escapeHTML(student.fullName)}) رقم: ${student.registrationId || 'غير محدد'}.\n\nنأمل منكم تأكيد رغبتكم بالالتحاق أو الاستفسار عن أي معلومات إضافية.\n\nشاكرين تعاونكم.`,
-                approved: `السلام عليكم ورحمة الله وبركاته\n\nعائلة الطالب (${escapeHTML(student.fullName)}) المحترمة،\n\nيسرنا إعلامكم بقبول طلب تسجيل ${escapeHTML(student.gender === 'أنثى' ? 'الطالبة' : 'الطالب')} (${escapeHTML(student.fullName)}) في مدارس الأرتقاء الأهلية للعام الدراسي ${escapeHTML(student.academicYear || 'الحالي')}.\n\nيرجى مراجعة الإدارة لاستكمال إجراءات التسجيل.\n\nمع فائق الاحترام،\nإدارة مدارس الأرتقاء الأهلية`
+                approved: `السلام عليكم ورحمة الله وبركاته\n\nعائلة الطالب (${escapeHTML(student.fullName)}) المحترمة،\n\nيسرنا إعلامكم بقبول طلب تسجيل ${escapeHTML(student.gender === 'أنثى' ? 'الطالبة' : 'الطالب')} (${escapeHTML(student.fullName)}) في مدارس الأرتقاء الأهلية للعام الدراسي ${escapeHTML(student.academicYear || 'الحالي')}.\n\nيرجى مراجعة الإدارة لاستكمال إجراءات التسليم.\n\nمع فائق الاحترام،\nإدارة مدارس الأرتقاء الأهلية`,
+                interview: `السلام عليكم ورحمة الله وبركاته\n\nعائلة الطالب (${escapeHTML(student.fullName)}) المحترمة،\n\nيسعدنا دعوتكم لإجراء مقابلة شخصية مع ${escapeHTML(student.gender === 'أنثى' ? 'الطالبة' : 'الطالب')} في مدارس الأرتقاء الأهلية؛ وذلك للتعرف على قدرات ${escapeHTML(student.gender === 'أنثى' ? 'الطالبة' : 'الطالب')} وإتمام إجراءات التسجيل.\n\nنؤمن بأن كل طالب لديه طموحات وإمكانيات تستحق الرعاية، ونتطلع لاستقبالكم في أقرب وقت.\n\nللحجز والاستفسار: 07850009133\n\nمع خالص التحية والتقدير،\nإدارة مدارس الأرتقاء الأهلية`,
+                rejected: `السلام عليكم ورحمة الله وبركاته\n\nعائلة الطالب (${escapeHTML(student.fullName)}) المحترمة،\n\nنشكركم على اهتمامكم بتسجيل ${escapeHTML(student.gender === 'أنثى' ? 'الطالبة' : 'الطالب')} في مدارس الأرتقاء الأهلية. بعد دراسة الطلب، نأسف لإعلامكم بعدم إمكانية قبوله للعام الدراسي ${escapeHTML(student.academicYear || 'الحالي')} نظراً لاكتمال المقاعد المتاحة.\n\nندعو الله أن يوفقكم في اختيار المدرسة المناسبة، ونتمنى لكم كل التوفيق.\n\nمع فائق الاحترام والتقدير،\nإدارة مدارس الأرتقاء الأهلية`
             };
             // تخزين القوالب في الـ modal لاستخدامها عبر تفويض الأحداث
             document.getElementById('detailModal').dataset.waPhone = student.phone || '';
@@ -2411,7 +2423,7 @@
         // ===== إضافة ملاحظة تواصل (استماع على الـ modal) =====
         document.getElementById('detailModal').addEventListener('click', async function(e) {
             // ===== قوالب واتساب (تفويض) =====
-            const waBtn = e.target.closest('.wa-template-btn');
+            const waBtn = e.target.closest('.btn-wa-action');
             if (waBtn) {
                 e.stopPropagation();
                 const template = this._waTemplates?.[waBtn.dataset.template];
