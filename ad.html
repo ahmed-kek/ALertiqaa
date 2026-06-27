@@ -2915,86 +2915,79 @@
             const typeLabel = type === 'accept' ? 'قبول' : type === 'interview' ? 'دعوة مقابلة' : 'اعتذار';
 
             // تجهيز قائمة الطلاب
-            const students = [];
-            const missingPhone = [];
+            let hasAnyPhone = false;
+            const studentRows = [];
             for (const id of ids) {
                 const snap = await getDoc(doc(db, 'students', id));
                 if (!snap.exists()) continue;
                 const data = snap.data();
-                if (data.phone && /^07\d{9}$/.test(data.phone)) {
-                    students.push({ id, name: data.fullName || 'غير معروف', phone: data.phone });
-                } else {
-                    missingPhone.push({ name: data.fullName || 'غير معروف', phone: data.phone || '—' });
-                }
+                const name = data.fullName || 'غير معروف';
+                const phone = (data.phone && /^07\d{9}$/.test(data.phone)) ? data.phone : null;
+                if (phone) hasAnyPhone = true;
+                studentRows.push({ name, phone, raw: data.phone || '—' });
             }
 
-            if (students.length === 0) {
-                showToast(`⚠️ لا يوجد طلاب بأرقام هواتف صالحة للإرسال.`, 'warning');
-                if (missingPhone.length > 0) {
-                    showToast(`📋 الطلاب بدون هاتف: ${missingPhone.map(s => s.name).join('، ') }`, 'info');
-                }
-                return;
-            }
+            // نافذة عرض قائمة المستلمين
+            const rowsHtml = studentRows.map((s, i) => `
+                <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border-light);font-size:14px;">
+                    <span style="color:var(--text-muted);min-width:24px;">${i + 1}.</span>
+                    <span style="flex:1;font-weight:600;color:var(--text-primary);">${escapeHTML(s.name)}</span>
+                    <span dir="ltr" style="color:${s.phone ? 'var(--primary)' : 'var(--danger)'};font-weight:700;font-size:13px;">${s.phone ? escapeHTML(s.phone) : '📞 ' + escapeHTML(s.raw)}</span>
+                </div>
+            `).join('');
 
-            // نافذة تأكيد
-            const confirmHtml = `
-                <div class="modal-overlay show" id="waConfirmModal">
-                    <div class="modal-box" style="max-width:550px;">
-                        <button class="close-modal" data-close="waConfirmModal"><i class="fas fa-times"></i></button>
-                        <h3 style="color:var(--primary-dark);margin-bottom:15px;"><i class="fas fa-paper-plane" style="color:#25d366;margin-left:8px;"></i> إرسال ${typeLabel}</h3>
-                        <div style="background:#f0fdf4;padding:14px;border-radius:12px;margin-bottom:15px;border-right:4px solid #25d366;font-size:14px;line-height:1.7;white-space:pre-wrap;">${escapeHTML(message)}</div>
-                        <p style="font-weight:700;color:var(--primary-dark);margin-bottom:10px;"><i class="fas fa-check-circle" style="color:#2d9d6e;"></i> سيتم الإرسال إلى ${students.length} طالب</p>
-                        ${missingPhone.length > 0 ? `
-                        <div style="background:#fff7ed;border-radius:12px;padding:12px;margin-bottom:15px;border-right:4px solid #f97316;">
-                            <p style="font-weight:700;color:#9a3412;margin-bottom:8px;"><i class="fas fa-exclamation-triangle" style="color:#f97316;"></i> ${missingPhone.length} طالب بدون رقم هاتف صالح — يرجى الاتصال بهم هاتفياً:</p>
-                            <ul style="margin:0;padding-right:20px;font-size:13px;color:#92400e;line-height:1.8;">
-                                ${missingPhone.map(s => `<li><strong>${escapeHTML(s.name)}</strong> (${escapeHTML(s.phone)})</li>`).join('')}
-                            </ul>
+            const hasMissing = studentRows.some(s => !s.phone);
+            const modalHtml = `
+                <div class="modal-overlay show" id="waRecipientsModal">
+                    <div class="modal-box" style="max-width:580px;">
+                        <button class="close-modal" data-close="waRecipientsModal"><i class="fas fa-times"></i></button>
+                        <h3 style="color:var(--primary-dark);margin-bottom:15px;">
+                            <i class="fab fa-whatsapp" style="color:#25d366;margin-left:8px;"></i>
+                            إرسال ${typeLabel} — ${studentRows.length} طالب
+                        </h3>
+                        <div style="background:#f0fdf4;padding:14px;border-radius:12px;margin-bottom:12px;border-right:4px solid #25d366;font-size:14px;line-height:1.7;white-space:pre-wrap;max-height:150px;overflow-y:auto;">${escapeHTML(message)}</div>
+                        <p style="font-weight:700;color:var(--text-secondary);font-size:13px;margin-bottom:8px;"><i class="fas fa-users"></i> قائمة المستلمين:</p>
+                        <div style="max-height:240px;overflow-y:auto;border:1px solid var(--border-light);border-radius:12px;padding:0 12px;margin-bottom:12px;">${rowsHtml}</div>
+                        ${hasMissing ? `
+                        <div style="background:#fff7ed;border-radius:10px;padding:10px 14px;margin-bottom:12px;border-right:3px solid #f97316;font-size:13px;color:#92400e;">
+                            <strong><i class="fas fa-phone"></i> الطلاب الذين بحاجة لاتصال هاتفي (بدون واتساب):</strong>
+                            <ul style="margin:6px 0 0;padding-right:16px;">${studentRows.filter(s => !s.phone).map(s => `<li>${escapeHTML(s.name)}</li>`).join('')}</ul>
                         </div>` : ''}
-                        <div style="display:flex;gap:10px;justify-content:center;margin-top:20px;">
-                            <button id="waConfirmSendBtn" style="padding:12px 30px;background:#25d366;color:#fff;border:none;border-radius:12px;font-weight:700;font-family:var(--font);font-size:16px;cursor:pointer;"><i class="fab fa-whatsapp"></i> إرسال للكل</button>
-                            <button class="btn-cancel" data-close="waConfirmModal" style="padding:12px 30px;background:var(--border);color:var(--text-primary);border:none;border-radius:12px;font-weight:700;font-family:var(--font);font-size:16px;cursor:pointer;">إلغاء</button>
+                        <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:15px;">
+                            <button id="waCopyBtn" style="padding:10px 20px;background:#475569;color:#fff;border:none;border-radius:10px;font-weight:700;font-family:var(--font);font-size:14px;cursor:pointer;"><i class="fas fa-copy"></i> نسخ الرسالة</button>
+                            ${hasAnyPhone ? `<button id="waOpenFirstBtn" style="padding:10px 20px;background:#25d366;color:#fff;border:none;border-radius:10px;font-weight:700;font-family:var(--font);font-size:14px;cursor:pointer;"><i class="fab fa-whatsapp"></i> فتح واتساب</button>` : ''}
+                            <button class="btn-cancel" data-close="waRecipientsModal" style="padding:10px 20px;background:var(--border);color:var(--text-primary);border:none;border-radius:10px;font-weight:700;font-family:var(--font);font-size:14px;cursor:pointer;">إغلاق</button>
                         </div>
                     </div>
                 </div>
             `;
             const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = confirmHtml;
+            tempDiv.innerHTML = modalHtml;
             document.body.appendChild(tempDiv);
 
-            // انتظار اختيار المستخدم
-            await new Promise((resolve) => {
-                document.getElementById('waConfirmSendBtn').addEventListener('click', async function() {
-                    document.getElementById('waConfirmModal').classList.remove('show');
-                    setTimeout(() => tempDiv.remove(), 300);
-
-                    // نسخ الرسالة إلى الحافظة
-                    try { await navigator.clipboard.writeText(message); } catch (e) { console.warn('تعذر النسخ للحافظة'); }
-
-                    // فتح واتساب للجميع مع تأخير
-                    let opened = 0;
-                    for (let i = 0; i < students.length; i++) {
-                        const s = students[i];
-                        const cleanPhone = s.phone.replace(/^0+/, '');
-                        const waNum = cleanPhone.startsWith('964') || cleanPhone.startsWith('+') ? cleanPhone : '964' + cleanPhone;
-                        setTimeout(() => {
-                            window.open(`https://wa.me/${waNum}?text=${encodeURIComponent(message)}`, '_blank');
-                        }, i * 800); // 800ms بين كل تبويب
-                        opened++;
-                    }
-
-                    let summary = `✅ تم فتح ${opened} محادثة واتساب`;
-                    if (missingPhone.length > 0) {
-                        summary += `\n⚠️ ${missingPhone.length} طالب بدون هاتف: ${missingPhone.map(s => s.name).join('، ')}`;
-                    }
-                    showToast(summary, opened > 0 ? 'success' : 'warning');
-                    resolve();
+            // ربط الأزرار
+            document.getElementById('waCopyBtn').addEventListener('click', async function() {
+                try {
+                    await navigator.clipboard.writeText(message);
+                    showToast('✅ تم نسخ الرسالة إلى الحافظة.', 'success');
+                } catch (e) { showToast('⚠️ تعذر النسخ', 'error'); }
+            });
+            const openBtn = document.getElementById('waOpenFirstBtn');
+            if (openBtn) {
+                openBtn.addEventListener('click', function() {
+                    const first = studentRows.find(s => s.phone);
+                    if (!first) return;
+                    const cleanPhone = first.phone.replace(/^0+/, '');
+                    const waNum = cleanPhone.startsWith('964') || cleanPhone.startsWith('+') ? cleanPhone : '964' + cleanPhone;
+                    window.open(`https://wa.me/${waNum}?text=${encodeURIComponent(message)}`, '_blank');
+                    // نسخ الرسالة تلقائياً
+                    navigator.clipboard.writeText(message).catch(() => {});
+                    showToast(`✅ تم فتح واتساب لـ ${first.name}. الرسالة منسوخة — أرسلها للباقي باللصق.`, 'success');
                 });
-                document.querySelector('[data-close="waConfirmModal"]').addEventListener('click', function() {
-                    document.getElementById('waConfirmModal').classList.remove('show');
-                    setTimeout(() => tempDiv.remove(), 300);
-                    resolve();
-                });
+            }
+            document.querySelector('[data-close="waRecipientsModal"]').addEventListener('click', function() {
+                document.getElementById('waRecipientsModal').classList.remove('show');
+                setTimeout(() => tempDiv.remove(), 300);
             });
         });
 
