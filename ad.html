@@ -169,46 +169,60 @@
         }
         .btn-logout { background: var(--danger); color: #fff; }
         .btn-logout:hover { background: var(--danger-dark); }
-        /* ===== شريط أدوات الجدول (تصدير + إضافة طالب) ===== */
-        .table-toolbar {
-            display: flex; justify-content: space-between; align-items: center;
-            flex-wrap: wrap; gap: 12px;
-            background: var(--bg-card); padding: 14px 20px; border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-            box-shadow: var(--shadow-sm); margin-bottom: 0;
+        /* ===== شريط الأدوات الموحد ===== */
+        .unified-toolbar {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+            box-shadow: var(--shadow-sm);
             border-bottom: 2px solid var(--border-light);
+            padding: 12px 18px;
+            display: flex; flex-direction: column; gap: 10px;
         }
-        .table-toolbar .filter-wrapper {
-            display: flex; flex-direction: column; gap: 2px;
-        }
-        .table-toolbar .filter-wrapper label {
-            font-size: 11px; font-weight: 700; color: var(--text-secondary); padding-right: 4px;
-        }
-        .table-toolbar .toolbar-filters {
+        .unified-toolbar .toolbar-row {
             display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
         }
-        .table-toolbar .toolbar-select {
-            padding: 8px 12px; border: 2px solid var(--border); border-radius: 10px;
+        .unified-toolbar .filter-wrapper {
+            display: flex; flex-direction: column; gap: 2px;
+        }
+        .unified-toolbar .filter-wrapper label {
+            font-size: 11px; font-weight: 700; color: var(--text-secondary); padding-right: 4px;
+        }
+        .unified-toolbar .toolbar-select {
+            padding: 7px 10px; border: 2px solid var(--border); border-radius: 10px;
             font-family: var(--font); font-size: 13px; background: var(--bg-card); color: var(--text-primary);
-            cursor: pointer; transition: var(--transition); min-width: 0;
-            font-weight: 600;
+            cursor: pointer; transition: var(--transition); font-weight: 600; min-width: 0;
         }
-        .table-toolbar .toolbar-select:focus { border-color: var(--primary); outline: none; }
-        .table-toolbar .btn-export-all {
-            padding: 10px 20px; background: var(--info); color: #fff; border: none; border-radius: 10px;
-            font-weight: 700; font-family: var(--font); font-size: 14px; cursor: pointer;
-            transition: var(--transition); box-shadow: 0 2px 6px rgba(37,99,235,0.2);
+        .unified-toolbar .toolbar-select:focus { border-color: var(--primary); outline: none; }
+        .unified-toolbar .bulk-info {
+            font-weight: 700; font-size: 13px; color: var(--text-secondary);
+            white-space: nowrap; padding: 4px 10px;
+            background: var(--bg); border-radius: 8px;
         }
-        .table-toolbar .btn-export-all:hover { background: var(--info-dark); transform: translateY(-1px); }
-        .table-toolbar .btn-add-student {
-            padding: 10px 20px; background: var(--accent); color: #fff; border: none; border-radius: 10px;
-            font-weight: 700; font-family: var(--font); font-size: 14px; cursor: pointer;
-            transition: var(--transition); box-shadow: 0 2px 6px rgba(176,143,74,0.2);
+        .unified-toolbar .bottom-row button {
+            padding: 8px 14px; border: none; border-radius: 10px;
+            font-family: var(--font); font-weight: 700; font-size: 13px;
+            cursor: pointer; transition: var(--transition); white-space: nowrap;
         }
-        .table-toolbar .btn-add-student:hover { background: #967e41; transform: translateY(-1px); }
+        .unified-toolbar .bottom-row button:hover { transform: translateY(-1px); filter: brightness(1.1); }
+        .btn-export-all { background: var(--info); color: #fff; box-shadow: 0 2px 6px rgba(37,99,235,0.2); }
+        .btn-export-all:hover { background: var(--info-dark) !important; }
+        .btn-toolbar-accept { background: #2d9d6e; color: #fff; }
+        .btn-toolbar-accept:hover { background: #166534 !important; }
+        .btn-toolbar-interview { background: #2563eb; color: #fff; }
+        .btn-toolbar-interview:hover { background: #1d4ed8 !important; }
+        .btn-toolbar-reject { background: #dc3545; color: #fff; }
+        .btn-toolbar-reject:hover { background: #b91c1c !important; }
+        .btn-toolbar-status { background: #b08f4a; color: #fff; }
+        .btn-toolbar-status:hover { background: #967e41 !important; }
+        .btn-toolbar-add { background: var(--accent); color: #fff; }
+        .btn-toolbar-add:hover { background: #967e41 !important; }
+        .btn-toolbar-delete { background: #fed7d7; color: #9b2c2c; }
+        .btn-toolbar-delete:hover { background: #feb2b2 !important; }
         @media (max-width: 768px) {
-            .table-toolbar { flex-direction: column; align-items: stretch; }
-            .table-toolbar .toolbar-filters { justify-content: center; }
-            .table-toolbar .toolbar-select { font-size: 11px; padding: 6px 8px; }
+            .unified-toolbar .top-row { flex-direction: column; align-items: stretch; }
+            .unified-toolbar .bottom-row { justify-content: center; }
+            .unified-toolbar .toolbar-select { font-size: 11px; padding: 6px 8px; }
+            .unified-toolbar .bottom-row button { font-size: 11px; padding: 6px 10px; }
         }
         /* ===== الإحصائيات ===== */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 15px; margin-bottom: 25px; }
@@ -283,47 +297,7 @@
         }
         .filter-section .clear-btn:hover { background: #cbd5e1; }
 
-        /* ===== الإجراءات الجماعية ===== */
-        .bulk-actions-wrapper {
-            display: none; background: #fefcf3; border: 2px solid var(--accent);
-            padding: 14px 20px; border-radius: 15px; margin-bottom: 15px;
-            align-items: center; justify-content: space-between; gap: 15px; flex-wrap: wrap;
-            box-shadow: 0 2px 8px rgba(176,143,74,0.1);
-        }
-        .bulk-actions-wrapper.show { display: flex; }
-        .bulk-actions-wrapper .bulk-info { font-weight: 700; color: var(--primary-dark); font-size: 14px; }
-        .bulk-actions-wrapper .bulk-btns { display: flex; gap: 10px; flex-wrap: wrap; }
-        .bulk-actions-wrapper .bulk-btns button {
-            border: none; padding: 8px 18px; border-radius: 10px;
-            font-family: var(--font); font-weight: 700; font-size: 13px;
-            cursor: pointer; transition: var(--transition);
-        }
-        .btn-bulk-delete { background: #fed7d7; color: #9b2c2c; }
-        .btn-bulk-delete:hover { background: #feb2b2; }
-        .btn-bulk-export { background: #c6f6d5; color: #22543d; }
-        .btn-bulk-export:hover { background: #9ae6b4; }
-        .btn-bulk-wa {
-            border: none; padding: 8px 16px; border-radius: 10px;
-            font-family: var(--font); font-weight: 700; font-size: 13px;
-            cursor: pointer; transition: var(--transition); color: #fff;
-        }
-        .btn-bulk-wa:hover { transform: translateY(-1px); filter: brightness(1.1); }
-        .btn-bulk-wa.accept { background: #2d9d6e; }
-        .btn-bulk-wa.interview { background: #2563eb; }
-        .btn-bulk-wa.reject { background: #dc3545; }
-        .btn-toolbar-wa {
-            padding: 8px 14px; border: none; border-radius: 10px;
-            font-family: var(--font); font-weight: 700; font-size: 13px;
-            cursor: pointer; transition: var(--transition); color: #fff;
-        }
-        .btn-toolbar-wa:hover { transform: translateY(-1px); filter: brightness(1.1); }
-        .btn-toolbar-wa.accept { background: #2d9d6e; box-shadow: 0 2px 6px rgba(45,157,110,0.2); }
-        .btn-toolbar-wa.interview { background: #2563eb; box-shadow: 0 2px 6px rgba(37,99,235,0.2); }
-        .btn-toolbar-wa.reject { background: #dc3545; box-shadow: 0 2px 6px rgba(220,53,69,0.2); }
-        @media (max-width: 768px) {
-            .btn-toolbar-wa { padding: 6px 10px; font-size: 11px; }
-            .btn-bulk-wa { padding: 6px 12px; font-size: 11px; }
-        }
+        /* ===== الإجراءات الجماعية (موجود في الشريط الموحد) ===== */
 
         /* ===== الجدول ===== */
         .table-wrapper {
@@ -763,7 +737,7 @@
         /* ===== Print Styles ===== */
         @media print {
             body { background: #fff !important; padding: 0 !important; }
-            .admin-header, .actions, .tab-bar, .table-toolbar, .filter-section, .bulk-actions-wrapper,
+            .admin-header, .actions, .tab-bar, .unified-toolbar, .filter-section, .bulk-actions-wrapper,
             .pagination, .control-section, .table-wrapper thead, .action-btns,
             .btn-print-report, .btn-pdf-report, .close-modal, #toast-container { display: none !important; }
             .modal-overlay { position: static !important; background: none !important; backdrop-filter: none !important; }
@@ -873,20 +847,8 @@
                     </div>
                 </div>
 
-                <div class="bulk-actions-wrapper" id="bulkActionsBar">
-                    <span class="bulk-info" id="bulkSelectedCount">تم تحديد 0 طالب</span>
-                    <div class="bulk-btns">
-                        <button class="btn-bulk-export" id="bulkExportBtn" title="تصدير الطلاب المحددين إلى ملف CSV"><i class="fas fa-download"></i> تصدير المحدد</button>
-                        <button class="btn-bulk-export" id="bulkStatusBtn" style="background:#b08f4a;color:#fff;" title="تغيير حالة الطلاب المحددين (جديد/مؤكد/الخ)"><i class="fas fa-tags"></i> تغيير الحالة</button>
-                        <button class="btn-bulk-wa accept" data-wa-bulk="accept" title="إرسال رسالة قبول للطلاب المحددين"><i class="fas fa-check-circle"></i> ✅ قبول</button>
-                        <button class="btn-bulk-wa interview" data-wa-bulk="interview" title="إرسال دعوة مقابلة للطلاب المحددين"><i class="fas fa-handshake"></i> 🎯 مقابلة</button>
-                        <button class="btn-bulk-wa reject" data-wa-bulk="reject" title="إرسال رسالة اعتذار للطلاب المحددين"><i class="fas fa-times-circle"></i> ❌ اعتذار</button>
-                        <button class="btn-bulk-delete" id="bulkDeleteBtn" title="نقل الطلاب المحددين إلى سلة المحذوفات"><i class="fas fa-trash"></i> حذف المحدد</button>
-                    </div>
-                </div>
-
-                <div class="table-toolbar">
-                    <div class="toolbar-filters">
+                <div class="unified-toolbar" id="unifiedToolbar">
+                    <div class="toolbar-row top-row">
                         <div class="filter-wrapper"><label>الصف</label><select id="toolbarGrade" class="toolbar-select">
                             <option value="">الكل</option>
                             <option>الصف التمهيدي</option><option>الأول ابتدائي</option><option>الثاني ابتدائي</option>
@@ -900,28 +862,24 @@
                             <option value="أنثى">أنثى</option>
                         </select></div>
                         <div class="filter-wrapper"><label>العمر</label><select id="toolbarAge" class="toolbar-select">
-                            <option value="">الكل</option>
-                            <option value="5">5 سنوات</option>
-                            <option value="6">6 سنوات</option>
-                            <option value="7">7 سنوات</option>
-                            <option value="8">8 سنوات</option>
-                            <option value="9">9 سنوات</option>
-                            <option value="10">10 سنوات</option>
-                            <option value="11">11 سنوات</option>
-                            <option value="12">12 سنوات</option>
-                            <option value="13">13 سنوات</option>
-                            <option value="14">14 سنوات</option>
-                            <option value="15">15 سنوات</option>
-                            <option value="16">16 سنوات</option>
-                            <option value="17">17 سنوات</option>
-                            <option value="18">18 سنوات</option>
+                            <option value="">الكل</option><option value="5">5</option><option value="6">6</option><option value="7">7</option>
+                            <option value="8">8</option><option value="9">9</option><option value="10">10</option>
+                            <option value="11">11</option><option value="12">12</option><option value="13">13</option>
+                            <option value="14">14</option><option value="15">15</option><option value="16">16</option>
+                            <option value="17">17</option><option value="18">18</option>
                         </select></div>
-                        <button class="btn-export-all" id="exportBtn" title="تصدير جميع الطلاب المفلترين إلى ملف CSV"><i class="fas fa-download"></i> تصدير</button>
-                        <button class="btn-toolbar-wa accept" data-wa-bulk="accept" title="إرسال رسالة قبول لجميع الطلاب المفلترين"><i class="fas fa-check-circle"></i> ✅ قبول</button>
-                        <button class="btn-toolbar-wa interview" data-wa-bulk="interview" title="إرسال دعوة مقابلة لجميع الطلاب المفلترين"><i class="fas fa-handshake"></i> 🎯 مقابلة</button>
-                        <button class="btn-toolbar-wa reject" data-wa-bulk="reject" title="إرسال رسالة اعتذار لجميع الطلاب المفلترين"><i class="fas fa-times-circle"></i> ❌ اعتذار</button>
+                        <div class="search-box" style="flex:1;min-width:150px;"><i class="fas fa-search"></i><input type="text" id="searchInput" placeholder="ابحث بالاسم..." title="أدخل أول حرفين من اسم الطالب للبحث" style="padding:8px 14px 8px 36px;border:2px solid var(--border);border-radius:10px;font-family:var(--font);font-size:13px;width:100%;background:var(--bg-card);color:var(--text-primary);"></div>
                     </div>
-                    <button class="btn-add-student" id="addStudentBtn" title="إضافة طالب جديد إلى قاعدة البيانات"><i class="fas fa-user-plus"></i> إضافة طالب</button>
+                    <div class="toolbar-row bottom-row">
+                        <span class="bulk-info" id="bulkSelectedCount"><i class="fas fa-check-square"></i> 0</span>
+                        <button class="btn-export-all" id="exportBtn" title="تصدير الظاهرين"><i class="fas fa-download"></i> تصدير</button>
+                        <button class="btn-toolbar-accept" data-wa-bulk="accept" title="إرسال قبول"><i class="fas fa-check-circle"></i> قبول</button>
+                        <button class="btn-toolbar-interview" data-wa-bulk="interview" title="إرسال دعوة مقابلة"><i class="fas fa-handshake"></i> مقابلة</button>
+                        <button class="btn-toolbar-reject" data-wa-bulk="reject" title="إرسال اعتذار"><i class="fas fa-times-circle"></i> اعتذار</button>
+                        <button class="btn-toolbar-status" id="bulkStatusBtn" title="تغيير حالة المحدد"><i class="fas fa-tags"></i> حالة</button>
+                        <button class="btn-toolbar-add" id="addStudentBtn" title="إضافة طالب"><i class="fas fa-user-plus"></i> إضافة</button>
+                        <button class="btn-toolbar-delete" id="bulkDeleteBtn" title="حذف المحدد"><i class="fas fa-trash"></i> حذف</button>
+                    </div>
                 </div>
 
                 <div class="table-wrapper">
@@ -1364,6 +1322,7 @@
 
         // ===== استخدام Set بدلاً من Array للتحسين =====
         const selectedStudentIds = new Set();
+        let visibleStudentIds = [];
 
         // ===== كاش بيانات الطلاب للبحث المحلي (0 قراءة من Firestore) =====
         const STUDENT_CACHE_KEY = 'studentSearchCache_v2';
@@ -1895,6 +1854,8 @@
             if (ageFilter) {
                 activeDocs = activeDocs.filter(d => d.data().age === Number(ageFilter));
             }
+            // تتبع المعرفات الظاهرة (للأزرار الجماعية)
+            visibleStudentIds = activeDocs.map(d => d.id);
             if (activeDocs.length === 0 && docs.length > 0) {
                 studentsBody.innerHTML = `<tr><td colspan="10" class="empty-msg"><i class="fas fa-inbox"></i> لا توجد سجلات نشطة مطابقة</td></tr>`;
                 resultCount.textContent = `(عرض 0 من ${totalDocs} طالب)`;
@@ -2046,13 +2007,11 @@
         // ===== شريط التحكم الجماعي =====
         function updateBulkActionsBar() {
             const count = selectedStudentIds.size;
-            const bar = document.getElementById('bulkActionsBar');
             const info = document.getElementById('bulkSelectedCount');
             if (count > 0) {
-                bar.classList.add('show');
-                info.textContent = `تم تحديد عدد (${count}) طالب للتحكم السريع الجماعي`;
+                info.innerHTML = `<i class="fas fa-check-square" style="color:#2d9d6e;"></i> ${count}`;
             } else {
-                bar.classList.remove('show');
+                info.innerHTML = `<i class="fas fa-check-square"></i> 0`;
             }
             const totalVisible = document.querySelectorAll('.student-check').length;
             document.getElementById('selectAllCheck').checked = (count > 0 && count === totalVisible);
@@ -2728,8 +2687,8 @@
 
         // ===== حذف جماعي (نقل إلى سلة المحذوفات) =====
         document.getElementById('bulkDeleteBtn').addEventListener('click', async function() {
-            const count = selectedStudentIds.size;
-            if (count === 0) {
+            const ids = getTargetIds();
+            if (ids.length === 0) {
                 showToast('❌ لم يتم تحديد أي طالب للحذف.', 'error');
                 return;
             }
@@ -2738,9 +2697,8 @@
             if (!hasPermission) return;
 
             try {
-                showToast(`⏳ جاري نقل ${count} طالب إلى سلة المحذوفات...`, 'info');
+                showToast(`⏳ جاري نقل ${ids.length} طالب إلى سلة المحذوفات...`, 'info');
                 const now = Timestamp.fromDate(new Date());
-                const ids = Array.from(selectedStudentIds);
 
                 // اقرأ بيانات الطلاب لحساب العداد
                 const docSnaps = await Promise.all(ids.map(id => getDoc(doc(db, "students", id))));
@@ -2835,7 +2793,7 @@
             if (scope === 'page') {
                 return pageSnapshots[currentPage]?.docs || [];
             } else if (scope === 'selected') {
-                const ids = Array.from(selectedStudentIds);
+                const ids = getTargetIds();
                 if (ids.length === 0) return [];
                 const docPromises = ids.map(id => getDoc(doc(db, "students", id)));
                 const docSnaps = await Promise.all(docPromises);
@@ -2950,10 +2908,9 @@
             } catch (e) { showToast('❌ فشل التصدير: ' + e.message, 'error'); }
         }
 
-        exportBtn.addEventListener('click', exportData);
-        document.getElementById('bulkExportBtn').addEventListener('click', function() {
-            // التصدير الافتراضي: CSV لكل الطلاب
-            exportData();
+        exportBtn.addEventListener('click', function() {
+            // تصدير الظاهرين إن لم يكن هناك تحديد، وإلا تصدير المحددين
+            exportData('csv', 'selected');
         });
 
         // ===== إرسال واتساب جماعي =====
@@ -2988,17 +2945,10 @@
 إدارة مدارس الأرتقاء الأهلية`
         };
 
-        function getFilteredStudentIds() {
-            // يجمع IDs جميع الطلاب المطابقين للفلاتر الحالية (من الكاش)
-            const grade = document.getElementById('toolbarGrade').value;
-            const gender = document.getElementById('toolbarGender').value;
-            const age = document.getElementById('toolbarAge').value;
-            return studentCache
-                .filter(s => !s.deleted)
-                .filter(s => !grade || s.grade === grade)
-                .filter(s => !gender || s.gender === gender)
-                .filter(s => !age || s.age === Number(age))
-                .map(s => s.id);
+        function getTargetIds() {
+            // إذا كان هناك تحديد → استخدم المحددين، وإلا → استخدم الظاهرين في الجدول
+            if (selectedStudentIds.size > 0) return Array.from(selectedStudentIds);
+            return visibleStudentIds;
         }
 
         document.addEventListener('click', async function(e) {
@@ -3009,18 +2959,10 @@
             const message = waBulkMessages[type];
             if (!message) return;
 
-            const isBulkAction = btn.closest('#bulkActionsBar');
-            let ids;
-            if (isBulkAction) {
-                ids = Array.from(selectedStudentIds);
-                if (ids.length === 0) { showToast('❌ لم يتم تحديد أي طالب.', 'error'); return; }
-            } else {
-                ids = getFilteredStudentIds();
-                if (ids.length === 0) { showToast('❌ لا يوجد طلاب مطابقين للفلاتر.', 'error'); return; }
-            }
+            const ids = getTargetIds();
+            if (ids.length === 0) { showToast('❌ لا يوجد طلاب للإرسال.', 'error'); return; }
 
             const typeLabel = type === 'accept' ? 'قبول' : type === 'interview' ? 'دعوة مقابلة' : 'اعتذار';
-            const sourceLabel = isBulkAction ? 'المحددين' : 'المفلترين';
 
             if (!confirm(`📨 إرسال رسالة ${typeLabel}\n\nالعدد: ${ids.length} طالب\n\nسيتم نسخ الرسالة إلى الحافظة وفتح واتساب لأول طالب.\n\n${message}\n\nهل تريد المتابعة؟`)) return;
 
@@ -3051,13 +2993,14 @@
 
         // ===== تغيير حالة جماعي =====
         document.getElementById('bulkStatusBtn').addEventListener('click', function() {
-            const count = selectedStudentIds.size;
-            if (count === 0) { showToast('❌ لم يتم تحديد أي طالب.', 'error'); return; }
-            document.getElementById('bulkStatusCount').textContent = `عدد الطلاب المحددين: ${count}`;
+            const ids = getTargetIds();
+            if (ids.length === 0) { showToast('❌ لا يوجد طلاب.', 'error'); return; }
+            document.getElementById('bulkStatusCount').textContent = `عدد الطلاب: ${ids.length}`;
+            document.getElementById('bulkStatusModal').dataset.bulkIds = JSON.stringify(ids);
             document.getElementById('bulkStatusModal').classList.add('show');
         });
         document.getElementById('confirmBulkStatusBtn').addEventListener('click', async function() {
-            const ids = Array.from(selectedStudentIds);
+            const ids = JSON.parse(document.getElementById('bulkStatusModal').dataset.bulkIds || '[]');
             const newStatus = document.getElementById('bulkStatusSelect').value;
             const count = ids.length;
             if (count === 0) { showToast('❌ لا يوجد طلاب محددين.', 'error'); return; }
