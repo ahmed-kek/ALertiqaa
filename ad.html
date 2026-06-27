@@ -1040,6 +1040,7 @@
                 </div>
                 <p style="margin-top:16px;font-size:12px;color:var(--text-muted);word-break:break-all;" id="qrUrlText"></p>
                 <div style="display:flex;gap:10px;justify-content:center;margin-top:15px;flex-wrap:wrap;">
+                    <button id="qrDownloadBtn" style="padding:10px 20px;background:var(--primary-dark);color:#fff;border:none;border-radius:12px;font-weight:700;font-family:var(--font);cursor:pointer;font-size:14px;"><i class="fas fa-download"></i> تحميل QR</button>
                     <button id="qrCopyBtn" style="padding:10px 20px;background:var(--primary);color:#fff;border:none;border-radius:12px;font-weight:700;font-family:var(--font);cursor:pointer;font-size:14px;"><i class="fas fa-copy"></i> نسخ الرابط</button>
                     <button class="btn-cancel" data-close="qrModal" style="padding:10px 20px;"><i class="fas fa-times"></i> إغلاق</button>
                 </div>
@@ -1778,6 +1779,16 @@
                 document.body.removeChild(ta);
                 showToast('✅ تم نسخ الرابط.', 'success');
             });
+        });
+        document.getElementById('qrDownloadBtn').addEventListener('click', function() {
+            const img = document.getElementById('qrImage');
+            if (!img.src || img.style.display === 'none') { showToast('❌ رمز QR غير متاح.', 'error'); return; }
+            const link = document.createElement('a');
+            link.download = 'QR_تسجيل_الارتقاء.png';
+            link.href = img.src;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         });
 
         // ===== البحث المحلي مع Fuse.js (بحث سريع في الذاكرة) =====
