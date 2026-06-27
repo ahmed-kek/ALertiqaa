@@ -1242,23 +1242,8 @@
             const hasPermission = await checkAdminPermission();
             if (!hasPermission) return;
             try {
-                const snap = await getDoc(doc(db, "students", id));
-                if (!snap.exists()) return;
-                const data = snap.data();
-                const grade = data.grade || 'غير_محدد';
-                const gender = data.gender || '';
-                await runTransaction(db, async (tx) => {
-                    const s = await tx.get(statsRef);
-                    tx.update(doc(db, "students", id), { deleted: false, deletedAt: null, restoredAt: Timestamp.fromDate(new Date()) });
-                    if (s.exists()) {
-                        tx.update(statsRef, {
-                            total: increment(1),
-                            male: increment(gender === 'ذكر' ? 1 : 0),
-                            female: increment(gender === 'أنثى' ? 1 : 0),
-                            deletedCount: increment(-1),
-                        });
-                    }
-                });
+                await updateDoc(doc(db, "students", id), { deleted: false, deletedAt: null, restoredAt: Timestamp.fromDate(new Date()) });
+                await recalculateStats();
                 showToast('✅ تم استعادة الطالب بنجاح.', 'success');
                 loadTrash();
                 loadStudents();
@@ -1276,24 +1261,8 @@
             const id = document.getElementById('deleteDocId').value;
             if (!id) return;
             try {
-                const snap = await getDoc(doc(db, "students", id));
-                // خفض العداد (بما في ذلك deletedCount)
-                if (snap.exists()) {
-                    const data = snap.data();
-                    await runTransaction(db, async (tx) => {
-                        const s = await tx.get(statsRef);
-                        if (s.exists()) {
-                            const sd = s.data();
-                            tx.update(statsRef, {
-                                total: increment(-1),
-                                male: increment(data.gender === 'ذكر' ? -1 : 0),
-                                female: increment(data.gender === 'أنثى' ? -1 : 0),
-                                deletedCount: increment(-1)
-                            });
-                        }
-                    });
-                }
                 await deleteDoc(doc(db, "students", id));
+                await recalculateStats();
                 showToast('✅ تم الحذف النهائي.', 'success');
                 loadTrash();
                 loadStudents();
@@ -1415,13 +1384,50 @@
                     setLocalCache('alertiqaa_admin_stats', d);
                     applyStatsToUI(d);
                 } else {
-                    await setDoc(statsRef, {
-                        total: 0, male: 0, female: 0, todayCount: 0,
-                        lastReset: new Date().toISOString().split('T')[0]
-                    });
-                    applyStatsToUI({ total: 0, male: 0, female: 0, todayCount: 0 });
+                    await recalculateStats();
                 }
             } catch (e) { console.warn("⚠️ فشل جلب الإحصائيات:", e); }
+        }
+
+        // ===== إعادة حساب الإحصائيات من قاعدة البيانات (الأرقام الفعلية) =====
+        async function recalculateStats() {
+            try {
+                const allP = getCountFromServer(query(collection(db, "students"), where("deleted", "==", false)));
+                const maleP = getCountFromServer(query(collection(db, "students"), where("deleted", "==", false), where("gender", "==", "ذكر")));
+                const femaleP = getCountFromServer(query(collection(db, "students"), where("deleted", "==", false), where("gender", "==", "أنثى")));
+                const deletedP = getCountFromServer(query(collection(db, "students"), where("deleted", "==", true)));
+
+                const [allR, maleR, femaleR, deletedR] = await Promise.all([allP, maleP, femaleP, deletedP]);
+                const total = allR.data().count;
+                const male = maleR.data().count;
+                const female = femaleR.data().count;
+                const deletedCount = deletedR.data().count;
+                const today = new Date().toISOString().split('T')[0];
+
+                await setDoc(statsRef, {
+                    total, male, female, deletedCount,
+                    todayCount: total, // سيُضبط بشكل صحيح أدناه
+                    lastReset: today,
+                    lastUpdated: serverTimestamp()
+                }, { merge: true });
+
+                // حساب todayCount بشكل دقيق
+                const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+                const todayP = getCountFromServer(query(collection(db, "students"), where("deleted", "==", false), where("registeredAt", ">=", todayStart)));
+                const todayR = await todayP;
+                await setDoc(statsRef, { todayCount: todayR.data().count }, { merge: true });
+
+                const updatedSnap = await getDoc(statsRef);
+                if (updatedSnap.exists()) {
+                    const d = updatedSnap.data();
+                    setLocalCache('alertiqaa_admin_stats', d);
+                    applyStatsToUI(d);
+                }
+                return { total, male, female, deletedCount };
+            } catch (e) {
+                console.warn("⚠️ فشل إعادة حساب الإحصائيات:", e);
+                return null;
+            }
         }
         function applySettingsToUI(data) {
             if (!data) return;
@@ -1980,23 +1986,8 @@
         let _statsRecalculated = false;
         async function recalcStatsOnce() {
             try {
-                const allP = getCountFromServer(query(collection(db, "students")));
-                const delP = getCountFromServer(query(collection(db, "students"), where("deleted", "==", true)));
-                const maleP = getCountFromServer(query(collection(db, "students"), where("gender", "==", "ذكر")));
-                const femaleP = getCountFromServer(query(collection(db, "students"), where("gender", "==", "أنثى")));
-                const todayStart = new Date(); todayStart.setHours(0,0,0,0);
-                const todayP = getCountFromServer(query(collection(db, "students"), where("registeredAt", ">=", todayStart)));
-
-                const [allR, delR, maleR, femaleR, todayR] = await Promise.all([allP, delP, maleP, femaleP, todayP]);
-                const total = allR.data().count - delR.data().count;
-                const male = maleR.data().count;
-                const female = femaleR.data().count;
-                const todayCount = todayR.data().count;
-
-                await setDoc(statsRef, { total, male, female, todayCount, lastReset: new Date().toISOString().split('T')[0], lastUpdated: serverTimestamp() }, { merge: true });
+                await recalculateStats();
                 _statsRecalculated = true;
-                const updatedSnap = await getDoc(statsRef);
-                if (updatedSnap.exists()) applyStatsToUI(updatedSnap.data());
             } catch (e) { console.warn("⚠️ فشل التصحيح الأولي للإحصائيات:", e); }
         }
         function loadDashboardData() {
@@ -2044,32 +2035,12 @@
                     const hasPermission = await checkAdminPermission();
                     if (!hasPermission) return;
                     try {
-                        await runTransaction(db, async (tx) => {
-                            const s = await tx.get(statsRef);
-                            tx.update(doc(db, "students", id), { deleted: true, deletedAt: Timestamp.fromDate(new Date()) });
-                            if (s.exists()) {
-                                tx.update(statsRef, {
-                                    total: increment(-1),
-                                    male: increment(gender === 'ذكر' ? -1 : 0),
-                                    female: increment(gender === 'أنثى' ? -1 : 0),
-                                    deletedCount: increment(1)
-                                });
-                            }
-                        });
+                        await updateDoc(doc(db, "students", id), { deleted: true, deletedAt: Timestamp.fromDate(new Date()) });
+                        await recalculateStats();
                         showToast('🗑️ تم نقل الطالب إلى سلة المحذوفات.', 'warning', 'تراجع', async () => {
                             try {
-                                await runTransaction(db, async (tx) => {
-                                    const s = await tx.get(statsRef);
-                                    tx.update(doc(db, "students", id), { deleted: false, deletedAt: null });
-                                    if (s.exists()) {
-                                        tx.update(statsRef, {
-                                            total: increment(1),
-                                            male: increment(gender === 'ذكر' ? 1 : 0),
-                                            female: increment(gender === 'أنثى' ? 1 : 0),
-                                            deletedCount: increment(-1)
-                                        });
-                                    }
-                                });
+                                await updateDoc(doc(db, "students", id), { deleted: false, deletedAt: null });
+                                await recalculateStats();
                                 showToast('✅ تم التراجع عن الحذف.', 'success');
                                 loadStudents();
                             } catch (e) { showToast('❌ فشل التراجع.', 'error'); }
@@ -2558,52 +2529,23 @@
                 showToast(`⏳ جاري نقل ${ids.length} طالب إلى سلة المحذوفات...`, 'info');
                 const now = Timestamp.fromDate(new Date());
 
-                // اقرأ بيانات الطلاب لحساب العداد
-                const docSnaps = await Promise.all(ids.map(id => getDoc(doc(db, "students", id))));
-                let maleCount2 = 0, femaleCount2 = 0;
-                docSnaps.forEach(snap => {
-                    if (snap.exists()) {
-                        const d = snap.data();
-                        if (d.gender === 'ذكر') maleCount2++;
-                        else if (d.gender === 'أنثى') femaleCount2++;
-                    }
-                });
-
                 const batch = writeBatch(db);
                 for (const id of ids) {
                     batch.update(doc(db, "students", id), { deleted: true, deletedAt: now });
                 }
-                // حدث العداد
-                const s = await getDoc(statsRef);
-                if (s.exists()) {
-                    const updates = { total: increment(-ids.length), deletedCount: increment(ids.length), male: increment(-maleCount2), female: increment(-femaleCount2) };
-                    batch.update(statsRef, updates);
-                }
                 await batch.commit();
+                await recalculateStats();
                 const deletedIds = new Set(ids);
                 selectedStudentIds.clear();
                 updateBulkActionsBar();
                 showToast(`✅ تم نقل ${ids.length} طالب إلى سلة المحذوفات.`, 'warning', 'تراجع', async () => {
                     try {
-                        const undoSnaps = await Promise.all(Array.from(deletedIds).map(id => getDoc(doc(db, "students", id))));
-                        let umale = 0, ufemale = 0;
-                        undoSnaps.forEach(snap => {
-                            if (snap.exists()) {
-                                const d = snap.data();
-                                if (d.gender === 'ذكر') umale++;
-                                else if (d.gender === 'أنثى') ufemale++;
-                            }
-                        });
                         const undoBatch = writeBatch(db);
                         for (const id of deletedIds) {
                             undoBatch.update(doc(db, "students", id), { deleted: false, deletedAt: null });
                         }
-                        const s2 = await getDoc(statsRef);
-                        if (s2.exists()) {
-                            const uupdates = { total: increment(ids.length), deletedCount: increment(-ids.length), male: increment(umale), female: increment(ufemale) };
-                            undoBatch.update(statsRef, uupdates);
-                        }
                         await undoBatch.commit();
+                        await recalculateStats();
                         showToast('✅ تم التراجع عن الحذف الجماعي.', 'success');
                         loadStudents();
                     } catch (e) { showToast('❌ فشل التراجع.', 'error'); }
