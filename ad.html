@@ -1068,7 +1068,7 @@
                     <div class="form-row" style="display:flex;flex-wrap:wrap;gap:15px;">
                         <div class="form-group" style="flex:1 1 calc(50% - 15px);min-width:180px;">
                             <label style="display:block;font-weight:600;font-size:14px;color:var(--text-primary);margin-bottom:5px;">الاسم الكامل</label>
-                            <input type="text" id="addFullName" style="width:100%;padding:12px 16px;border:2px solid var(--border);border-radius:12px;font-size:15px;font-family:var(--font);background:var(--bg);color:var(--text-primary);">
+                            <input type="text" id="addFullName" maxlength="120" style="width:100%;padding:12px 16px;border:2px solid var(--border);border-radius:12px;font-size:15px;font-family:var(--font);background:var(--bg);color:var(--text-primary);">
                         </div>
                         <div class="form-group" style="flex:1 1 calc(50% - 15px);min-width:180px;">
                             <label style="display:block;font-weight:600;font-size:14px;color:var(--text-primary);margin-bottom:5px;">تاريخ الميلاد</label>
@@ -1092,19 +1092,19 @@
                         </div>
                         <div class="form-group" style="flex:1 1 calc(50% - 15px);min-width:180px;">
                             <label style="display:block;font-weight:600;font-size:14px;color:var(--text-primary);margin-bottom:5px;">ولي الأمر</label>
-                            <input type="text" id="addParentName" style="width:100%;padding:12px 16px;border:2px solid var(--border);border-radius:12px;font-size:15px;font-family:var(--font);background:var(--bg);color:var(--text-primary);">
+                            <input type="text" id="addParentName" maxlength="100" style="width:100%;padding:12px 16px;border:2px solid var(--border);border-radius:12px;font-size:15px;font-family:var(--font);background:var(--bg);color:var(--text-primary);">
                         </div>
                         <div class="form-group" style="flex:1 1 calc(50% - 15px);min-width:180px;">
                             <label style="display:block;font-weight:600;font-size:14px;color:var(--text-primary);margin-bottom:5px;">جهة العمل</label>
-                            <input type="text" id="addParentJob" style="width:100%;padding:12px 16px;border:2px solid var(--border);border-radius:12px;font-size:15px;font-family:var(--font);background:var(--bg);color:var(--text-primary);">
+                            <input type="text" id="addParentJob" maxlength="100" style="width:100%;padding:12px 16px;border:2px solid var(--border);border-radius:12px;font-size:15px;font-family:var(--font);background:var(--bg);color:var(--text-primary);">
                         </div>
                         <div class="form-group" style="flex:1 1 calc(50% - 15px);min-width:180px;">
                             <label style="display:block;font-weight:600;font-size:14px;color:var(--text-primary);margin-bottom:5px;">رقم الجوال</label>
-                            <input type="tel" id="addPhone" style="width:100%;padding:12px 16px;border:2px solid var(--border);border-radius:12px;font-size:15px;font-family:var(--font);background:var(--bg);color:var(--text-primary);">
+                            <input type="tel" id="addPhone" maxlength="20" style="width:100%;padding:12px 16px;border:2px solid var(--border);border-radius:12px;font-size:15px;font-family:var(--font);background:var(--bg);color:var(--text-primary);">
                         </div>
                         <div class="form-group" style="flex:1 1 calc(50% - 15px);min-width:180px;">
                             <label style="display:block;font-weight:600;font-size:14px;color:var(--text-primary);margin-bottom:5px;">العنوان</label>
-                            <input type="text" id="addAddress" style="width:100%;padding:12px 16px;border:2px solid var(--border);border-radius:12px;font-size:15px;font-family:var(--font);background:var(--bg);color:var(--text-primary);">
+                            <input type="text" id="addAddress" maxlength="200" style="width:100%;padding:12px 16px;border:2px solid var(--border);border-radius:12px;font-size:15px;font-family:var(--font);background:var(--bg);color:var(--text-primary);">
                         </div>
                         <div class="form-group" style="flex:1 1 100%;">
                             <label style="display:block;font-weight:600;font-size:14px;color:var(--text-primary);margin-bottom:5px;">الملاحظات</label>
@@ -1276,7 +1276,7 @@
             const hasPermission = await checkAdminPermission();
             if (!hasPermission) return;
             try {
-                await updateDoc(doc(db, "students", id), { deleted: false, deletedAt: null, restoredAt: Timestamp.fromDate(new Date()) });
+                await updateDoc(doc(db, "students", id), { deleted: false, deletedAt: null, restoredAt: serverTimestamp() });
                 await recalculateStats();
                 trashSelectedIds.delete(id);
                 showToast('✅ تم استعادة الطالب بنجاح.', 'success');
@@ -1361,7 +1361,7 @@
                 showToast(`⏳ جاري استعادة ${ids.length} طالب...`, 'info');
                 const batch = writeBatch(db);
                 for (const id of ids) {
-                    batch.update(doc(db, "students", id), { deleted: false, deletedAt: null, restoredAt: Timestamp.fromDate(new Date()) });
+                    batch.update(doc(db, "students", id), { deleted: false, deletedAt: null, restoredAt: serverTimestamp() });
                 }
                 await batch.commit();
                 await recalculateStats();
@@ -1456,6 +1456,7 @@
         let lastKnownTime = null;
         let notificationInterval = null;
         let unsubscribeStats = null;
+        let studentCache = [];
         let statsRefreshInterval = null;
         let configRefreshInterval = null;
 
@@ -1602,9 +1603,10 @@
         }
 
         async function logout() {
-            try { await signOut(auth); } catch (e) {}
+            try { await signOut(auth); } catch (e) { console.warn("⚠️ فشل تسجيل الخروج:", e); }
             if (statsRefreshInterval) { clearInterval(statsRefreshInterval); statsRefreshInterval = null; }
             if (configRefreshInterval) { clearInterval(configRefreshInterval); configRefreshInterval = null; }
+            if (notificationInterval) { clearInterval(notificationInterval); notificationInterval = null; }
             loginScreen.style.display = 'flex';
             dashboard.style.display = 'none';
             showToast('🔒 تم تسجيل الخروج.', 'info');
@@ -1707,7 +1709,7 @@
                     } else {
                         await setDoc(phoneRegRef, { names: [name], count: 1 });
                     }
-                } catch (e) {}
+                } catch (e) { console.warn("⚠️ فشل تسجيل الهاتف:", e); }
 
                 // تحديث العداد
                 try {
@@ -1722,13 +1724,14 @@
                             });
                         }
                     });
-                } catch (e) {}
+                } catch (e) { console.warn("⚠️ فشل تحديث العداد:", e); }
 
                 showToast(`✅ تم إضافة الطالب ${name}`, 'success');
                 document.getElementById('addStudentModal').classList.remove('show');
                 btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> حفظ الطالب';
                 // إعادة ضبط الحقول
                 document.querySelectorAll('#addStudentModal input, #addStudentModal textarea').forEach(el => el.value = '');
+                document.querySelectorAll('#addStudentModal select').forEach(el => el.selectedIndex = 0);
                 loadStudents();
                 refreshStatsFromFirestore();
             } catch (e) {
@@ -1783,12 +1786,27 @@
         document.getElementById('qrDownloadBtn').addEventListener('click', function() {
             const img = document.getElementById('qrImage');
             if (!img.src || img.style.display === 'none') { showToast('❌ رمز QR غير متاح.', 'error'); return; }
-            const link = document.createElement('a');
-            link.download = 'QR_تسجيل_الارتقاء.png';
-            link.href = img.src;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            // تحميل QR باستخدام fetch لتجنب مشاكل CORS
+            fetch(img.src)
+                .then(res => res.blob())
+                .then(blob => {
+                    const link = document.createElement('a');
+                    link.download = 'QR_تسجيل_الارتقاء.png';
+                    link.href = URL.createObjectURL(blob);
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(link.href);
+                })
+                .catch(() => {
+                    // Fallback: الرابط المباشر (قد لا يعمل في بعض المتصفحات)
+                    const link = document.createElement('a');
+                    link.download = 'QR_تسجيل_الارتقاء.png';
+                    link.href = img.src;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                });
         });
 
         // ===== البحث المحلي مع Fuse.js (بحث سريع في الذاكرة) =====
@@ -2172,7 +2190,7 @@
                     const hasPermission = await checkAdminPermission();
                     if (!hasPermission) return;
                     try {
-                        await updateDoc(doc(db, "students", id), { deleted: true, deletedAt: Timestamp.fromDate(new Date()) });
+                        await updateDoc(doc(db, "students", id), { deleted: true, deletedAt: serverTimestamp() });
                         await recalculateStats();
                         showToast('🗑️ تم نقل الطالب إلى سلة المحذوفات.', 'warning', 'تراجع', async () => {
                             try {
@@ -2664,11 +2682,10 @@
 
             try {
                 showToast(`⏳ جاري نقل ${ids.length} طالب إلى سلة المحذوفات...`, 'info');
-                const now = Timestamp.fromDate(new Date());
 
                 const batch = writeBatch(db);
                 for (const id of ids) {
-                    batch.update(doc(db, "students", id), { deleted: true, deletedAt: now });
+                    batch.update(doc(db, "students", id), { deleted: true, deletedAt: serverTimestamp() });
                 }
                 await batch.commit();
                 await recalculateStats();
@@ -3098,15 +3115,18 @@
                     if (tabBtn) tabBtn.click();
                 });
             });
-            // مزامنة التنقل السفلي مع tabs
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const tab = this.dataset.tab;
-                    document.querySelectorAll('.bottom-nav button').forEach(b => {
-                        b.classList.toggle('active', b.dataset.tab === tab);
+            // مزامنة التنقل السفلي مع tabs (مرة واحدة فقط)
+            if (!document.querySelector('.tab-btn._synced')) {
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.classList.add('_synced');
+                    btn.addEventListener('click', function() {
+                        const tab = this.dataset.tab;
+                        document.querySelectorAll('.bottom-nav button').forEach(b => {
+                            b.classList.toggle('active', b.dataset.tab === tab);
+                        });
                     });
                 });
-            });
+            }
             // Initialize Command Palette
             initCommandPalette();
             // Initialize Keyboard Shortcuts
@@ -3482,11 +3502,10 @@
                 }
                 updateTitle();
 
-                // مراقبة التسجيلات الجديدة كل 30 ثانية (بدلاً من onSnapshot لتوفير القراءات)
-                setInterval(async () => {
+                // مراقبة التسجيلات الجديدة كل 60 ثانية
+                if (notificationInterval) clearInterval(notificationInterval);
+                notificationInterval = setInterval(async () => {
                     try {
-                        const now = new Date();
-                        const today = now.toISOString().split('T')[0];
                         const q = query(collection(db, "students"),
                             where("registeredAt", ">=", new Date(lastCheckedRegistration)),
                             orderBy("registeredAt", "desc"),
@@ -3497,7 +3516,6 @@
                             if (data.fullName && doc.data().registeredAt?.toDate() > new Date(lastCheckedRegistration)) {
                                 unreadRegistrations++;
                                 showToast(`🆕 تسجيل جديد: ${escapeHTML(data.fullName)}`, 'info');
-                                // تشغيل صوت الإشعار
                                 try {
                                     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                                     const osc = audioCtx.createOscillator();
@@ -3517,7 +3535,7 @@
                             localStorage.setItem('unreadRegistrations', unreadRegistrations.toString());
                         }
                     } catch (e) { /* تجاهل أخطاء الفحص */ }
-                }, 60000); // كل 60 ثانية (توفير قراءات Firestore)
+                }, 60000);
 
             } catch (e) { console.warn('⚠️ فشل إعداد الإشعارات:', e); }
         }
