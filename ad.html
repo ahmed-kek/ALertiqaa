@@ -1033,10 +1033,15 @@
                 <p style="color:var(--text-secondary);font-size:14px;margin-bottom:18px;">امسح الرمز بكاميرا هاتفك للوصول إلى نموذج التسجيل</p>
                 <div id="qrContainer" style="background:#fff;padding:16px;border-radius:16px;display:inline-block;margin:0 auto;">
                     <img id="qrImage" src="" alt="QR Code" style="width:220px;height:220px;image-rendering:pixelated;">
+                    <div id="qrFallback" style="display:none;width:220px;height:220px;background:#f0f0f0;border-radius:8px;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:#666;">
+                        <i class="fas fa-exclamation-triangle" style="font-size:36px;"></i>
+                        <p style="font-size:13px;font-weight:600;">تعذر تحميل رمز QR</p>
+                    </div>
                 </div>
                 <p style="margin-top:16px;font-size:12px;color:var(--text-muted);word-break:break-all;" id="qrUrlText"></p>
-                <div style="display:flex;gap:10px;justify-content:center;margin-top:15px;">
-                    <button class="btn-cancel" data-close="qrModal" style="padding:10px 30px;"><i class="fas fa-times"></i> إغلاق</button>
+                <div style="display:flex;gap:10px;justify-content:center;margin-top:15px;flex-wrap:wrap;">
+                    <button id="qrCopyBtn" style="padding:10px 20px;background:var(--primary);color:#fff;border:none;border-radius:12px;font-weight:700;font-family:var(--font);cursor:pointer;font-size:14px;"><i class="fas fa-copy"></i> نسخ الرابط</button>
+                    <button class="btn-cancel" data-close="qrModal" style="padding:10px 20px;"><i class="fas fa-times"></i> إغلاق</button>
                 </div>
             </div>
         </div>
@@ -1746,13 +1751,33 @@
 
         // ===== QR Code =====
         document.getElementById('qrBtn').addEventListener('click', function() {
-            const url = window.location.origin + '/';
-            document.getElementById('qrImage').src = 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=' + encodeURIComponent(url);
-            document.getElementById('qrUrlText').textContent = url;
+            const baseUrl = window.location.origin + window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+            document.getElementById('qrImage').src = 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=' + encodeURIComponent(baseUrl);
+            document.getElementById('qrImage').onerror = function() {
+                this.style.display = 'none';
+                document.getElementById('qrFallback').style.display = 'block';
+            };
+            document.getElementById('qrUrlText').textContent = baseUrl;
             document.getElementById('qrModal').classList.add('show');
         });
         document.querySelectorAll('[data-close="qrModal"]').forEach(el => {
             el.addEventListener('click', () => document.getElementById('qrModal').classList.remove('show'));
+        });
+        document.getElementById('qrCopyBtn').addEventListener('click', function() {
+            const text = document.getElementById('qrUrlText').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('✅ تم نسخ الرابط.', 'success');
+            }).catch(() => {
+                // Fallback for older browsers
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed'; ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+                showToast('✅ تم نسخ الرابط.', 'success');
+            });
         });
 
         // ===== البحث المحلي مع Fuse.js (بحث سريع في الذاكرة) =====
