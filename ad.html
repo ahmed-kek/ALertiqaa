@@ -980,9 +980,14 @@
                         <span class="title" title="الطلاب المحذوفون - يمكن استعادتهم"><i class="fas fa-trash-alt"></i> الطلاب المحذوفون</span>
                         <span class="count" id="trashCount">(0 طالب)</span>
                     </div>
+                    <div class="bulk-actions-bar" id="trashBulkBar" style="display:none;padding:10px 14px;background:var(--bg-card);border-bottom:1px solid var(--border);align-items:center;gap:10px;flex-wrap:wrap;">
+                        <span class="bulk-info" id="trashBulkCount"><i class="fas fa-check-square"></i> 0</span>
+                        <button class="btn-toolbar-accept" id="trashBulkRestoreBtn" style="padding:8px 16px;font-size:14px;"><i class="fas fa-undo"></i> استعادة الكل</button>
+                        <button class="btn-toolbar-delete" id="trashBulkDeleteBtn" style="padding:8px 16px;font-size:14px;"><i class="fas fa-times"></i> حذف نهائي</button>
+                    </div>
                     <table>
-                        <thead><tr><th>#</th><th>الاسم الكامل</th><th>الصف</th><th>الجنس</th><th>تاريخ الحذف</th><th>الإجراءات</th></tr></thead>
-                        <tbody id="trashTableBody"><tr><td colspan="6" class="empty-msg"><i class="fas fa-inbox"></i> لا توجد سجلات محذوفة</td></tr></tbody>
+                        <thead><tr><th style="width:40px;"><input type="checkbox" id="trashSelectAll" style="width:18px;height:18px;cursor:pointer;" title="تحديد الكل"></th><th>#</th><th>الاسم الكامل</th><th>الصف</th><th>الجنس</th><th>تاريخ الحذف</th><th>الإجراءات</th></tr></thead>
+                        <tbody id="trashTableBody"><tr><td colspan="7" class="empty-msg"><i class="fas fa-inbox"></i> لا توجد سجلات محذوفة</td></tr></tbody>
                     </table>
                 </div>
             </div>
@@ -1206,11 +1211,10 @@
         // ===== دوال سلة المحذوفات =====
         async function loadTrash() {
             const tbody = document.getElementById('trashTableBody');
-            tbody.innerHTML = Array(3).fill(0).map(() => '<tr><td><div class="skeleton skeleton-text" style="width:30px;margin:auto;"></div></td><td><div class="skeleton skeleton-text" style="width:120px;margin:auto;"></div></td><td><div class="skeleton skeleton-text" style="width:80px;margin:auto;"></div></td><td><div class="skeleton skeleton-text" style="width:40px;margin:auto;"></div></td><td><div class="skeleton skeleton-text" style="width:80px;margin:auto;"></div></td><td><div class="skeleton" style="width:80px;height:28px;border-radius:10px;margin:auto;"></div></td></tr>').join('');
+            tbody.innerHTML = Array(3).fill(0).map(() => '<tr><td><div class="skeleton" style="width:18px;height:18px;border-radius:4px;margin:auto;"></div></td><td><div class="skeleton skeleton-text" style="width:30px;margin:auto;"></div></td><td><div class="skeleton skeleton-text" style="width:120px;margin:auto;"></div></td><td><div class="skeleton skeleton-text" style="width:80px;margin:auto;"></div></td><td><div class="skeleton skeleton-text" style="width:40px;margin:auto;"></div></td><td><div class="skeleton skeleton-text" style="width:80px;margin:auto;"></div></td><td><div class="skeleton" style="width:80px;height:28px;border-radius:10px;margin:auto;"></div></td></tr>').join('');
             try {
                 const snap = await getDocs(query(collection(db, "students"), where("deleted", "==", true), limit(100)));
                 let docs = snap.docs;
-                // ترتيب تنازلي حسب deletedAt (يدوياً لتجنب الحاجة إلى index مركب)
                 docs.sort((a, b) => {
                     const ta = a.data().deletedAt ? (a.data().deletedAt.toDate ? a.data().deletedAt.toDate().getTime() : new Date(a.data().deletedAt).getTime()) : 0;
                     const tb = b.data().deletedAt ? (b.data().deletedAt.toDate ? b.data().deletedAt.toDate().getTime() : new Date(b.data().deletedAt).getTime()) : 0;
@@ -1219,8 +1223,13 @@
                 docs = docs.slice(0, 100);
                 document.getElementById('trashTotal').textContent = docs.length;
                 document.getElementById('trashCount').textContent = `(${docs.length} طالب)`;
+                // إزالة المعرفات التي لم تعد موجودة
+                const existingIds = new Set(docs.map(d => d.id));
+                for (const id of trashSelectedIds) {
+                    if (!existingIds.has(id)) trashSelectedIds.delete(id);
+                }
                 if (docs.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" class="empty-msg"><i class="fas fa-inbox"></i> لا توجد سجلات محذوفة</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="7" class="empty-msg"><i class="fas fa-inbox"></i> لا توجد سجلات محذوفة</td></tr>';
                     return;
                 }
                 let html = '';
@@ -1228,11 +1237,13 @@
                     const data = d.data();
                     const date = data.deletedAt ? (data.deletedAt.toDate ? data.deletedAt.toDate() : new Date(data.deletedAt)) : new Date();
                     const formatted = date.toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric' });
-                    html += `<tr><td>${i+1}</td><td><strong>${escapeHTML(data.fullName || 'غير معروف')}</strong></td><td><span class="badge-grade">${escapeHTML(data.grade || '-')}</span></td><td>${escapeHTML(data.gender || '-')}</td><td style="font-size:12px;">${formatted}</td><td><div class="action-btns"><button class="btn-restore" data-sid="${escapeHTML(d.id)}"><i class="fas fa-undo"></i> استعادة</button><button class="btn-permanent-delete" data-sid="${escapeHTML(d.id)}"><i class="fas fa-times"></i> حذف نهائي</button></div></td></tr>`;
+                    const checked = trashSelectedIds.has(d.id) ? 'checked' : '';
+                    html += `<tr><td><input type="checkbox" class="trash-check" data-id="${d.id}" style="width:18px;height:18px;cursor:pointer;" ${checked}></td><td>${i+1}</td><td><strong>${escapeHTML(data.fullName || 'غير معروف')}</strong></td><td><span class="badge-grade">${escapeHTML(data.grade || '-')}</span></td><td>${escapeHTML(data.gender || '-')}</td><td style="font-size:12px;">${formatted}</td><td><div class="action-btns"><button class="btn-restore" data-sid="${escapeHTML(d.id)}"><i class="fas fa-undo"></i> استعادة</button><button class="btn-permanent-delete" data-sid="${escapeHTML(d.id)}"><i class="fas fa-times"></i> حذف نهائي</button></div></td></tr>`;
                 });
                 tbody.innerHTML = html;
+                updateTrashBulkBar();
             } catch (e) {
-                tbody.innerHTML = `<tr><td colspan="6" class="empty-msg"><i class="fas fa-exclamation-triangle"></i> خطأ: ${escapeHTML(e.message)}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="empty-msg"><i class="fas fa-exclamation-triangle"></i> خطأ: ${escapeHTML(e.message)}</td></tr>`;
             }
         }
 
@@ -1242,6 +1253,7 @@
             try {
                 await updateDoc(doc(db, "students", id), { deleted: false, deletedAt: null, restoredAt: Timestamp.fromDate(new Date()) });
                 await recalculateStats();
+                trashSelectedIds.delete(id);
                 showToast('✅ تم استعادة الطالب بنجاح.', 'success');
                 loadTrash();
                 loadStudents();
@@ -1261,13 +1273,14 @@
             try {
                 await deleteDoc(doc(db, "students", id));
                 await recalculateStats();
+                trashSelectedIds.delete(id);
                 showToast('✅ تم الحذف النهائي.', 'success');
                 loadTrash();
                 loadStudents();
             } catch (e) { showToast('❌ فشل الحذف النهائي: ' + e.message, 'error'); }
         };
 
-        // ===== تفويض الأحداث لسلة المحذوفات (بدلاً من onclick المباشر) =====
+        // ===== تفويض الأحداث لسلة المحذوفات =====
         document.getElementById('trashTableBody').addEventListener('click', function(e) {
             const btn = e.target.closest('button');
             if (!btn) return;
@@ -1280,6 +1293,79 @@
                 e.preventDefault();
                 window.permanentDeleteStudent(id);
             }
+        });
+        document.getElementById('trashTableBody').addEventListener('change', (e) => {
+            const chk = e.target.closest('.trash-check');
+            if (!chk) return;
+            const id = chk.dataset.id;
+            if (chk.checked) trashSelectedIds.add(id);
+            else trashSelectedIds.delete(id);
+            updateTrashBulkBar();
+        });
+        // تحديد الكل في سلة المحذوفات
+        document.getElementById('trashSelectAll').addEventListener('change', function() {
+            const checks = document.querySelectorAll('.trash-check');
+            checks.forEach(c => {
+                c.checked = this.checked;
+                if (this.checked) trashSelectedIds.add(c.dataset.id);
+                else trashSelectedIds.delete(c.dataset.id);
+            });
+            updateTrashBulkBar();
+        });
+        function updateTrashBulkBar() {
+            const count = trashSelectedIds.size;
+            const bar = document.getElementById('trashBulkBar');
+            const info = document.getElementById('trashBulkCount');
+            if (count > 0) {
+                bar.style.display = 'flex';
+                info.innerHTML = `<i class="fas fa-check-square" style="color:#2d9d6e;"></i> ${count}`;
+            } else {
+                bar.style.display = 'none';
+                info.innerHTML = `<i class="fas fa-check-square"></i> 0`;
+            }
+            const totalVisible = document.querySelectorAll('.trash-check').length;
+            document.getElementById('trashSelectAll').checked = (count > 0 && count === totalVisible);
+        }
+        // استعادة جماعية
+        document.getElementById('trashBulkRestoreBtn').addEventListener('click', async function() {
+            const ids = Array.from(trashSelectedIds);
+            if (ids.length === 0) return;
+            const hasPermission = await checkAdminPermission();
+            if (!hasPermission) return;
+            try {
+                showToast(`⏳ جاري استعادة ${ids.length} طالب...`, 'info');
+                const batch = writeBatch(db);
+                for (const id of ids) {
+                    batch.update(doc(db, "students", id), { deleted: false, deletedAt: null, restoredAt: Timestamp.fromDate(new Date()) });
+                }
+                await batch.commit();
+                await recalculateStats();
+                trashSelectedIds.clear();
+                showToast(`✅ تم استعادة ${ids.length} طالب بنجاح.`, 'success');
+                loadTrash();
+                loadStudents();
+            } catch (e) { showToast('❌ فشل الاستعادة الجماعية: ' + e.message, 'error'); }
+        });
+        // حذف نهائي جماعي
+        document.getElementById('trashBulkDeleteBtn').addEventListener('click', async function() {
+            const ids = Array.from(trashSelectedIds);
+            if (ids.length === 0) return;
+            const hasPermission = await checkAdminPermission();
+            if (!hasPermission) return;
+            if (!confirm(`⚠️ هل أنت متأكد من حذف ${ids.length} طالب بشكل نهائي؟ لا يمكن التراجع عن هذا الإجراء.`)) return;
+            try {
+                showToast(`⏳ جاري الحذف النهائي لـ ${ids.length} طالب...`, 'info');
+                const batch = writeBatch(db);
+                for (const id of ids) {
+                    batch.delete(doc(db, "students", id));
+                }
+                await batch.commit();
+                await recalculateStats();
+                trashSelectedIds.clear();
+                showToast(`✅ تم حذف ${ids.length} طالب نهائياً.`, 'success');
+                loadTrash();
+                loadStudents();
+            } catch (e) { showToast('❌ فشل الحذف النهائي الجماعي: ' + e.message, 'error'); }
         });
 
         // ===== دوال التبويب =====
@@ -1334,6 +1420,7 @@
 
         // ===== استخدام Set بدلاً من Array للتحسين =====
         const selectedStudentIds = new Set();
+        const trashSelectedIds = new Set();
         let visibleStudentIds = [];
 
         // ===== كاش بيانات الطلاب للبحث المحلي (0 قراءة من Firestore) =====
