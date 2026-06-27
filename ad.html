@@ -106,41 +106,99 @@
 
         /* ===== شاشة الدخول ===== */
         #loginScreen {
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            min-height: 80vh; gap: 20px; text-align: center;
+            display: flex; align-items: center; justify-content: center;
+            min-height: 100vh; padding: 20px;
+            background: linear-gradient(135deg, #063a33 0%, #0a5a4a 50%, #0d6b58 100%);
             animation: fadeIn 0.6s ease;
         }
+        #loginScreen .login-card {
+            background: var(--bg-card);
+            border-radius: 24px;
+            padding: 45px 40px 35px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.05);
+            text-align: center;
+            animation: slideUp 0.5s ease;
+        }
         #loginScreen .login-icon {
-            font-size: 80px; color: var(--accent);
-            background: rgba(180,149,84,0.1);
-            width: 120px; height: 120px; border-radius: 50%;
+            width: 80px; height: 80px;
+            background: linear-gradient(135deg, var(--accent), #c9a84c);
+            border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            margin-bottom: 10px;
+            margin: 0 auto 18px;
+            box-shadow: 0 8px 25px rgba(176,143,74,0.3);
         }
-        #loginScreen h2 { color: var(--primary-dark); font-size: 28px; font-weight: 800; }
-        #loginScreen p { color: var(--text-secondary); font-size: 16px; font-weight: 600; }
-        #loginScreen input {
-            padding: 14px 25px; border: 2px solid var(--border); border-radius: var(--radius-md);
-            font-size: 18px; width: 320px; max-width: 100%; font-family: var(--font);
-            text-align: center; background: var(--bg-card); color: var(--text-primary);
+        #loginScreen .login-icon i { font-size: 36px; color: #fff; }
+        #loginScreen h2 { color: var(--text-primary); font-size: 24px; font-weight: 800; margin: 0 0 4px; }
+        #loginScreen .subtitle { color: var(--text-secondary); font-size: 14px; font-weight: 600; margin: 0 0 28px; line-height: 1.5; }
+        #loginScreen .form-group { margin-bottom: 16px; text-align: right; }
+        #loginScreen .form-group label { display: block; font-size: 13px; font-weight: 700; color: var(--text-secondary); margin-bottom: 5px; padding-right: 4px; }
+        #loginScreen .form-group input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid var(--border);
+            border-radius: 14px;
+            font-family: var(--font);
+            font-size: 16px;
+            background: var(--bg);
+            color: var(--text-primary);
             transition: var(--transition);
+            box-sizing: border-box;
+            text-align: right;
         }
-        #loginScreen input:focus {
-            outline: none; border-color: var(--primary);
-            box-shadow: 0 0 0 5px rgba(15,114,100,0.08);
+        #loginScreen .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(15,114,100,0.12);
         }
-        #adminPassInput { padding-inline-end: 40px !important; }
-        #loginScreen button {
-            padding: 14px 50px; background: var(--header-grad); color: #fff;
-            border: none; border-radius: var(--radius-md); font-size: 18px;
-            font-weight: 700; cursor: pointer; font-family: var(--font);
-            transition: var(--transition); box-shadow: var(--shadow-md);
+        #loginScreen .form-group input[dir="ltr"] { text-align: left; }
+        #loginScreen .password-wrapper { position: relative; }
+        #loginScreen .password-wrapper input { padding-left: 44px !important; }
+        #loginScreen .pass-toggle {
+            position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+            background: none; border: none; color: var(--text-muted);
+            cursor: pointer; font-size: 20px; padding: 8px; line-height: 1;
+            border-radius: 8px; transition: background 0.2s;
         }
-        #loginScreen button:hover { transform: translateY(-1px); box-shadow: var(--shadow-lg); }
-        #loginScreen button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-        .login-error { color: var(--danger); font-weight: 600; display: none; margin-top: 5px; font-size: 14px; line-height: 1.6; background: rgba(220,53,69,0.06); padding: 8px 14px; border-radius: 10px; }
-        .login-error.show { display: block; }
-        .login-error i { margin-left: 6px; }
+        #loginScreen .pass-toggle:hover { background: rgba(0,0,0,0.05); }
+        #loginScreen .login-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, var(--primary-dark), #0d6b58);
+            color: #fff;
+            border: none;
+            border-radius: 14px;
+            font-family: var(--font);
+            font-size: 17px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 4px 15px rgba(6,58,51,0.3);
+            margin-top: 4px;
+        }
+        #loginScreen .login-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(6,58,51,0.4); }
+        #loginScreen .login-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        #loginScreen .login-error {
+            display: none;
+            margin-top: 16px;
+            padding: 10px 14px;
+            background: rgba(220,53,69,0.08);
+            border: 1px solid rgba(220,53,69,0.2);
+            border-radius: 12px;
+            color: var(--danger);
+            font-size: 13px;
+            font-weight: 600;
+            text-align: center;
+            line-height: 1.6;
+        }
+        #loginScreen .login-error.show { display: block; }
+        #loginScreen .login-error i { margin-left: 6px; }
+        #loginScreen .login-footer { margin-top: 18px; font-size: 12px; color: var(--text-muted); }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
         #dashboard { display: none; }
 
         /* ===== الهيدر ===== */
@@ -736,7 +794,6 @@
             .table-header { flex-direction: column; text-align: center; }
             .tab-bar { overflow-x: auto; flex-wrap: nowrap; }
             .tab-btn { padding: 8px 14px; font-size: 13px; }
-            #loginScreen input { width: 100%; }
             input, select, textarea, button, .action-btns button,
             .tab-btn, .pagination button, .modal-box button,
             .filter-section select, .filter-section .search-box input {
@@ -764,18 +821,27 @@
 <body>
     <div class="container">
         <div id="loginScreen">
-            <div class="login-icon"><i class="fas fa-user-shield"></i></div>
-            <h2>لوحة تحكم المدير</h2>
-            <p>أدخل البريد الإلكتروني وكلمة المرور للدخول إلى نظام الإدارة</p>
-            <form id="loginForm">
-                <input type="email" id="adminEmailInput" placeholder="البريد الإلكتروني" dir="ltr" autocomplete="email" required>
-                <div style="position:relative;width:100%">
-                    <input type="password" id="adminPassInput" placeholder="كلمة المرور" dir="ltr" autocomplete="current-password" required>
-                    <button type="button" id="passToggleBtn" style="position:absolute;inset-inline-end:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:18px;padding:4px;line-height:1;" tabindex="-1" aria-label="إظهار/إخفاء كلمة المرور"><i class="fas fa-eye"></i></button>
-                </div>
-                <button type="submit" id="loginBtn"><i class="fas fa-sign-in-alt"></i> دخول</button>
-            </form>
-            <div class="login-error" id="loginError"><i class="fas fa-exclamation-circle"></i></div>
+            <div class="login-card">
+                <div class="login-icon"><i class="fas fa-user-shield"></i></div>
+                <h2>لوحة تحكم المدير</h2>
+                <p class="subtitle">أدخل البريد الإلكتروني وكلمة المرور للدخول إلى نظام الإدارة</p>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="adminEmailInput"><i class="fas fa-envelope" style="margin-left:4px;font-size:12px;"></i> البريد الإلكتروني</label>
+                        <input type="email" id="adminEmailInput" placeholder="admin@school.com" dir="ltr" autocomplete="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="adminPassInput"><i class="fas fa-lock" style="margin-left:4px;font-size:12px;"></i> كلمة المرور</label>
+                        <div class="password-wrapper">
+                            <input type="password" id="adminPassInput" placeholder="••••••••" dir="ltr" autocomplete="current-password" required>
+                            <button type="button" id="passToggleBtn" class="pass-toggle" tabindex="-1" aria-label="إظهار/إخفاء كلمة المرور"><i class="fas fa-eye"></i></button>
+                        </div>
+                    </div>
+                    <button type="submit" id="loginBtn" class="login-btn"><i class="fas fa-sign-in-alt"></i> دخول</button>
+                </form>
+                <div class="login-error" id="loginError"><i class="fas fa-exclamation-circle"></i></div>
+                <div class="login-footer">مدارس الأرتقاء الأهلية — Al-Ertiqaa Private Schools</div>
+            </div>
         </div>
 
         <div id="dashboard">
@@ -2059,6 +2125,7 @@
                 const updatedSnap = await getDoc(statsRef);
                 if (updatedSnap.exists()) applyStatsToUI(updatedSnap.data());
             } catch (e) { console.warn("⚠️ فشل التصحيح الأولي للإحصائيات:", e); }
+        }
         function loadDashboardData() {
             if ('Notification' in window && Notification.permission === 'default') {
                 Notification.requestPermission();
