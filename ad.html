@@ -2945,96 +2945,37 @@
             const ids = getTargetIds();
             if (ids.length === 0) { showToast('❌ لا يوجد طلاب للإرسال.', 'error'); return; }
 
-            const typeLabel = type === 'accept' ? 'قبول' : type === 'interview' ? 'دعوة مقابلة' : 'اعتذار';
-
             // تجهيز قائمة الطلاب
-            let hasAnyPhone = false;
-            const studentRows = [];
+            const phones = [];
+            let noPhoneCount = 0;
             for (const id of ids) {
                 const snap = await getDoc(doc(db, 'students', id));
                 if (!snap.exists()) continue;
                 const data = snap.data();
-                const name = data.fullName || 'غير معروف';
-                const phone = (data.phone && /^07\d{9}$/.test(data.phone)) ? data.phone : null;
-                if (phone) hasAnyPhone = true;
-                studentRows.push({ name, phone, raw: data.phone || '—' });
+                if (data.phone && /^07\d{9}$/.test(data.phone)) phones.push(data.phone);
+                else noPhoneCount++;
             }
 
-            // نافذة عرض قائمة المستلمين — مصممة للإرسال الجماعي عبر بث واتساب
-            const rowsHtml = studentRows.map((s, i) => `
-                <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border-light);font-size:14px;">
-                    <span style="color:var(--text-muted);min-width:24px;">${i + 1}.</span>
-                    <span style="flex:1;font-weight:600;color:var(--text-primary);">${escapeHTML(s.name)}</span>
-                    <span dir="ltr" style="color:${s.phone ? 'var(--primary)' : 'var(--danger)'};font-weight:700;font-size:13px;">${s.phone ? escapeHTML(s.phone) : '📞 ' + escapeHTML(s.raw)}</span>
-                </div>
-            `).join('');
+            if (phones.length === 0) { showToast('❌ لا يوجد طلاب لديهم رقم واتساب صحيح.', 'error'); return; }
 
-            const hasMissing = studentRows.some(s => !s.phone);
-            const broadcastHint = hasAnyPhone ? `
-                <div style="background:#eff6ff;padding:14px;border-radius:12px;margin-bottom:12px;border-right:4px solid #3b82f6;font-size:13px;line-height:1.8;color:#1e40af;">
-                    <strong><i class="fas fa-info-circle"></i> لإرسال الرسالة للجميع مرة واحدة:</strong>
-                    <ol style="margin:8px 0 0;padding-right:20px;">
-                        <li>اضغط <strong>"فتح واتساب"</strong> — ستفتح واتساب مع أول طالب والرسالة جاهزة</li>
-                        <li>في واتساب: اضغط القائمة <strong>(⋮)</strong> ← <strong>بث جديد</strong></li>
-                        <li>ألصق الأرقام المنسوخة في حقل البحث ← <strong>تحديد الكل</strong></li>
-                        <li>ألصق الرسالة ← اضغط <strong>إرسال</strong></li>
-                    </ol>
-                </div>` : '';
-
-            const modalHtml = `
-                <div class="modal-overlay show" id="waRecipientsModal" role="dialog" aria-modal="true" aria-label="إرسال واتساب جماعي">
-                    <div class="modal-box" style="max-width:580px;">
-                        <button class="close-modal" data-close="waRecipientsModal"><i class="fas fa-times"></i></button>
-                        <h3 style="color:var(--primary-dark);margin-bottom:12px;">
-                            <i class="fab fa-whatsapp" style="color:#25d366;margin-left:8px;"></i>
-                            إرسال ${typeLabel} — ${studentRows.length} طالب
-                        </h3>
-                        <div style="background:#f0fdf4;padding:14px;border-radius:12px;margin-bottom:12px;border-right:4px solid #25d366;font-size:14px;line-height:1.7;white-space:pre-wrap;max-height:150px;overflow-y:auto;">${escapeHTML(message)}</div>
-                        <p style="font-weight:700;color:var(--text-secondary);font-size:13px;margin-bottom:8px;"><i class="fas fa-users"></i> قائمة المستلمين:</p>
-                        <div style="max-height:200px;overflow-y:auto;border:1px solid var(--border-light);border-radius:12px;padding:0 12px;margin-bottom:12px;">${rowsHtml}</div>
-                        ${broadcastHint}
-                        ${hasMissing ? `
-                        <div style="background:#fff7ed;border-radius:10px;padding:10px 14px;margin-bottom:12px;border-right:3px solid #f97316;font-size:13px;color:#92400e;">
-                            <strong><i class="fas fa-phone"></i> الطلاب الذين بحاجة لاتصال هاتفي (بدون واتساب):</strong>
-                            <ul style="margin:6px 0 0;padding-right:16px;">${studentRows.filter(s => !s.phone).map(s => `<li>${escapeHTML(s.name)}</li>`).join('')}</ul>
-                        </div>` : ''}
-                        <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:15px;">
-                            <button id="waCopyAllBtn" style="padding:10px 18px;background:#475569;color:#fff;border:none;border-radius:10px;font-weight:700;font-family:var(--font);font-size:14px;cursor:pointer;"><i class="fas fa-copy"></i> نسخ الرسالة + الأرقام</button>
-                            ${hasAnyPhone ? `<button id="waSendAllBtn" style="padding:10px 18px;background:#25d366;color:#fff;border:none;border-radius:10px;font-weight:700;font-family:var(--font);font-size:14px;cursor:pointer;"><i class="fab fa-whatsapp"></i> فتح واتساب والإرسال للجميع</button>` : ''}
-                            <button class="btn-cancel" data-close="waRecipientsModal" style="padding:10px 18px;">إغلاق</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = modalHtml;
-            document.body.appendChild(tempDiv);
-
-            // ربط الأزرار
-            function copyAll() {
-                const phoneBlock = studentRows.filter(s => s.phone).map(s => `${s.name}: ${s.phone}`).join('\n');
-                const fullText = message + '\n\n---\n' + phoneBlock;
-                navigator.clipboard.writeText(fullText).then(() => {
-                    showToast('✅ تم نسخ الرسالة وجميع الأرقام.', 'success');
-                }).catch(() => showToast('⚠️ تعذر النسخ', 'error'));
+            // فتح محادثة واتساب لكل طالب
+            showToast(`⏳ جاري فتح ${phones.length} محادثة واتساب...`, 'info');
+            function buildWaUrl(phone) {
+                const clean = phone.replace(/^0+/, '');
+                const num = clean.startsWith('964') || clean.startsWith('+') ? clean : '964' + clean;
+                return `https://wa.me/${num}?text=${encodeURIComponent(message)}`;
             }
-            document.getElementById('waCopyAllBtn').addEventListener('click', copyAll);
-            const sendBtn = document.getElementById('waSendAllBtn');
-            if (sendBtn) {
-                sendBtn.addEventListener('click', function() {
-                    const first = studentRows.find(s => s.phone);
-                    if (!first) return;
-                    const cleanPhone = first.phone.replace(/^0+/, '');
-                    const waNum = cleanPhone.startsWith('964') || cleanPhone.startsWith('+') ? cleanPhone : '964' + cleanPhone;
-                    window.open(`https://wa.me/${waNum}?text=${encodeURIComponent(message)}`, '_blank');
-                    copyAll();
-                    showToast('✅ تم فتح واتساب. الرسالة والأرقام منسوخة — اذهب لبث جديد في واتساب ← ألصق الأرقام ← ألصق الرسالة ← إرسال', 'success');
-                });
+            // الأولى مباشرة (ضمن سياق النقرة), والباقي بتأخير
+            window.open(buildWaUrl(phones[0]), '_blank');
+            for (let i = 1; i < phones.length; i++) {
+                setTimeout(() => {
+                    window.open(buildWaUrl(phones[i]), '_blank');
+                }, i * 500);
             }
-            document.querySelector('[data-close="waRecipientsModal"]').addEventListener('click', function() {
-                document.getElementById('waRecipientsModal').classList.remove('show');
-                setTimeout(() => tempDiv.remove(), 300);
-            });
+            setTimeout(() => {
+                const extra = noPhoneCount > 0 ? ` (${noPhoneCount} بدون رقم)` : '';
+                showToast(`✅ تم فتح ${phones.length} محادثة واتساب${extra}`, 'success');
+            }, phones.length * 500 + 300);
         });
 
         // ===== تغيير حالة جماعي =====
