@@ -157,7 +157,7 @@
         .admin-header .brand { display: flex; align-items: center; gap: 15px; }
         .admin-header .brand img {
             width: 55px; height: 55px; border-radius: 50%;
-            border: 3px solid var(--accent); background: #fff; padding: 3px; object-fit: cover;
+            border: 3px solid var(--accent); background: var(--bg-card); padding: 3px; object-fit: cover;
         }
         .admin-header .brand h1 { color: #fff; font-size: 20px; font-weight: 800; }
         .admin-header .brand h1 small { display: block; font-size: 12px; color: var(--accent-light); font-weight: 400; }
@@ -810,7 +810,7 @@
             <!-- ===== التبويب الأول: الرئيسية ===== -->
             <div id="tabHome" class="tab-section active">
                 <div class="stats-grid">
-                    <div class="stat-card"><div class="stat-info"><h3><i class="fas fa-users" style="color:#b08f4a;margin-left:6px;"></i> إجمالي الطلاب</h3><p id="totalCount">0</p></div><div class="stat-icon"><i class="fas fa-user-graduate"></i></div></div>
+                    <div class="stat-card"><div class="stat-info"><h3><i class="fas fa-users" style="color:var(--accent);margin-left:6px;"></i> إجمالي الطلاب</h3><p id="totalCount">0</p></div><div class="stat-icon"><i class="fas fa-user-graduate"></i></div></div>
                     <div class="stat-card male"><div class="stat-info"><h3><i class="fas fa-mars" style="color:#2563eb;margin-left:6px;"></i> الذكور</h3><p id="maleCount">0</p></div><div class="stat-icon"><i class="fas fa-male"></i></div></div>
                     <div class="stat-card female"><div class="stat-info"><h3><i class="fas fa-venus" style="color:#d53f8c;margin-left:6px;"></i> الإناث</h3><p id="femaleCount">0</p></div><div class="stat-icon"><i class="fas fa-female"></i></div></div>
                     <div class="stat-card today"><div class="stat-info"><h3><i class="fas fa-calendar-day" style="color:#4299e1;margin-left:6px;"></i> مسجل اليوم</h3><p id="todayCount">0</p></div><div class="stat-icon"><i class="fas fa-calendar-check"></i></div></div>
@@ -824,7 +824,7 @@
                         <span style="color:#dc3545;font-weight:800;">مغلق</span>
                         <span id="statusBadge" class="status-badge open">مفتوح ✅</span>
                     </div>
-                    <p style="font-size:14px;color:#475569;margin:0;flex:1 1 100%;text-align:center;font-weight:600;"><i class="fas fa-sync-alt"></i> ينعكس فوراً على استمارة التسجيل</p>
+                    <p style="font-size:14px;color:var(--text-secondary);margin:0;flex:1 1 100%;text-align:center;font-weight:600;"><i class="fas fa-sync-alt"></i> ينعكس فوراً على استمارة التسجيل</p>
                 </div>
 
                 <div class="unified-toolbar" id="unifiedToolbar">
@@ -943,7 +943,7 @@
         <div class="modal-overlay" id="detailModal" role="dialog" aria-modal="true" aria-label="بيانات الطالب">
             <div class="modal-box">
                 <button class="close-modal" data-close="detailModal"><i class="fas fa-times"></i></button>
-                <h2><i class="fas fa-user-graduate" style="color:#b08f4a;"></i> بيانات الطالب المرفقة</h2>
+                <h2><i class="fas fa-user-graduate" style="color:var(--accent);"></i> بيانات الطالب المرفقة</h2>
                 <div class="modal-actions-bar">
                     <button class="btn-print-report" onclick="printStudentReport()" title="طباعة تقرير الطالب"><i class="fas fa-print"></i> طباعة</button>
                     <button class="btn-pdf-report" onclick="saveAsPDF()" title="حفظ بيانات الطالب كملف PDF"><i class="fas fa-file-pdf"></i> PDF</button>
@@ -960,8 +960,8 @@
             <div class="modal-box">
                 <button class="close-modal" data-close="deleteModal"><i class="fas fa-times"></i></button>
                 <i class="fas fa-skull-crossbones"></i>
-                <h3 style="margin-bottom:10px;color:#742a2a;">⚠️ حذف دائم لا يمكن التراجع عنه</h3>
-                <p style="color:#4a5568;margin-bottom:20px;">سيتم حذف الطالب وجميع سجلاته بشكل نهائي من قاعدة البيانات.</p>
+                <h3 style="margin-bottom:10px;color:var(--danger);">⚠️ حذف دائم لا يمكن التراجع عنه</h3>
+                <p style="color:var(--text-secondary);margin-bottom:20px;">سيتم حذف الطالب وجميع سجلاته بشكل نهائي من قاعدة البيانات.</p>
                 <div><button class="btn-danger" id="confirmDeleteBtn"><i class="fas fa-trash"></i> نعم، احذف نهائياً</button><button class="btn-cancel" data-close="deleteModal"><i class="fas fa-times"></i> إلغاء</button></div>
                 <input type="hidden" id="deleteDocId">
             </div>
@@ -970,7 +970,7 @@
         <div class="modal-overlay" id="editModal" role="dialog" aria-modal="true" aria-label="تعديل بيانات الطالب">
             <div class="modal-box" style="max-width:700px;">
                 <button class="close-modal" data-close="editModal"><i class="fas fa-times"></i></button>
-                <h2><i class="fas fa-edit" style="color:#b08f4a;"></i> تعديل بيانات الطالب</h2>
+                <h2><i class="fas fa-edit" style="color:var(--accent);"></i> تعديل بيانات الطالب</h2>
                 <div id="editContent"></div>
                 <div style="display:flex;gap:12px;margin-top:20px;flex-wrap:wrap;">
                     <button id="saveEditBtn" style="padding:12px 35px;background:#2d9d6e;color:#fff;border:none;border-radius:14px;font-weight:700;font-family:var(--font);cursor:pointer;font-size:16px;"><i class="fas fa-save"></i> حفظ التغييرات</button>
@@ -983,7 +983,7 @@
         <div class="modal-overlay" id="addStudentModal" role="dialog" aria-modal="true" aria-label="إضافة طالب جديد">
             <div class="modal-box" style="max-width:700px;">
                 <button class="close-modal" data-close="addStudentModal"><i class="fas fa-times"></i></button>
-                <h2><i class="fas fa-user-plus" style="color:#b08f4a;"></i> إضافة طالب جديد</h2>
+                <h2><i class="fas fa-user-plus" style="color:var(--accent);"></i> إضافة طالب جديد</h2>
                 <div id="addContent">
                     <div class="form-row" style="display:flex;flex-wrap:wrap;gap:15px;">
                         <div class="form-group" style="flex:1 1 calc(50% - 15px);min-width:180px;">
@@ -1042,8 +1042,8 @@
         <div class="modal-overlay" id="bulkStatusModal">
             <div class="modal-box" style="max-width:400px;text-align:center;">
                 <button class="close-modal" data-close="bulkStatusModal"><i class="fas fa-times"></i></button>
-                <h2><i class="fas fa-tags" style="color:#b08f4a;"></i> تغيير الحالة الجماعي</h2>
-                <p style="color:#718096;margin-bottom:15px;" id="bulkStatusCount">عدد الطلاب المحددين: 0</p>
+                <h2><i class="fas fa-tags" style="color:var(--accent);"></i> تغيير الحالة الجماعي</h2>
+                <p style="color:var(--text-secondary);margin-bottom:15px;" id="bulkStatusCount">عدد الطلاب المحددين: 0</p>
                 <select id="bulkStatusSelect" style="width:100%;padding:14px;border:2px solid var(--border);border-radius:12px;font-family:var(--font);font-size:16px;">
                     <option value="جديد">جديد</option>
                     <option value="تم الاتصال">تم الاتصال</option>
@@ -2430,7 +2430,7 @@
         }
 
         function renderContactHistory(history, studentId) {
-            if (!history || history.length === 0) return '<p style="color:#475569;font-size:15px;padding:12px 0;font-weight:600;"><i class="fas fa-info-circle"></i> لا توجد ملاحظات سابقة</p>';
+            if (!history || history.length === 0) return '<p style="color:var(--text-secondary);font-size:15px;padding:12px 0;font-weight:600;"><i class="fas fa-info-circle"></i> لا توجد ملاحظات سابقة</p>';
             return history.slice().reverse().map(h => `
                 <div class="contact-item">
                     <span class="contact-badge ${h.type}">${h.type}</span>
@@ -2921,13 +2921,13 @@
             const data = docs.map((d, i) => { const s = d.data ? d.data() : d; return { ...s, _idx: i + 1 }; });
             const rowsHtml = data.map(s => `
                 <tr>
-                    <td style="padding:6px 8px;border:1px solid #e2e8f0;text-align:center;">${s._idx}</td>
-                    <td style="padding:6px 8px;border:1px solid #e2e8f0;">${escapeHTML(s.fullName || '')}</td>
-                    <td style="padding:6px 8px;border:1px solid #e2e8f0;text-align:center;">${escapeHTML(s.grade || '')}</td>
-                    <td style="padding:6px 8px;border:1px solid #e2e8f0;text-align:center;">${escapeHTML(s.gender || '')}</td>
-                    <td style="padding:6px 8px;border:1px solid #e2e8f0;">${escapeHTML(s.parentName || '')}</td>
-                    <td style="padding:6px 8px;border:1px solid #e2e8f0;direction:ltr;text-align:center;">${escapeHTML(s.phone || '')}</td>
-                    <td style="padding:6px 8px;border:1px solid #e2e8f0;text-align:center;"><span class="status-badge" style="background:${s.status === 'مؤكد' ? '#d4edda' : s.status === 'تم الاتصال' ? '#cce5ff' : s.status === 'منسحب' ? '#f8d7da' : s.status === 'ملغي' ? '#e2e3e5' : '#fff3cd'};color:${s.status === 'مؤكد' ? '#155724' : s.status === 'تم الاتصال' ? '#004085' : s.status === 'منسحب' ? '#721c24' : s.status === 'ملغي' ? '#383d41' : '#856404'};padding:2px 8px;border-radius:20px;font-size:12px;font-weight:600;">${escapeHTML(s.status || 'جديد')}</span></td>
+                    <td style="padding:6px 8px;border:1px solid var(--border);text-align:center;">${s._idx}</td>
+                    <td style="padding:6px 8px;border:1px solid var(--border);">${escapeHTML(s.fullName || '')}</td>
+                    <td style="padding:6px 8px;border:1px solid var(--border);text-align:center;">${escapeHTML(s.grade || '')}</td>
+                    <td style="padding:6px 8px;border:1px solid var(--border);text-align:center;">${escapeHTML(s.gender || '')}</td>
+                    <td style="padding:6px 8px;border:1px solid var(--border);">${escapeHTML(s.parentName || '')}</td>
+                    <td style="padding:6px 8px;border:1px solid var(--border);direction:ltr;text-align:center;">${escapeHTML(s.phone || '')}</td>
+                    <td style="padding:6px 8px;border:1px solid var(--border);text-align:center;"><span class="status-badge" style="background:${s.status === 'مؤكد' ? '#1a3a2a' : s.status === 'تم الاتصال' ? '#1a2a3a' : s.status === 'منسحب' ? '#3a1a1a' : s.status === 'ملغي' ? '#2a2a2a' : '#3a3a1a'};color:${s.status === 'مؤكد' ? '#4ade80' : s.status === 'تم الاتصال' ? '#60a5fa' : s.status === 'منسحب' ? '#f87171' : s.status === 'ملغي' ? '#9ca3af' : '#fbbf24'};padding:2px 8px;border-radius:20px;font-size:12px;font-weight:600;">${escapeHTML(s.status || 'جديد')}</span></td>
                 </tr>
             `).join('');
 
@@ -3372,13 +3372,13 @@
                     transform: translateX(-50%);
                     width: 600px;
                     max-height: 400px;
-                    background: white;
+                    background: var(--bg-card);
                     border-radius: 12px;
                     box-shadow: 0 20px 60px rgba(0,0,0,0.3);
                     padding: 20px;
                     z-index: 10000;
                     display: none;
-                    border: 1px solid #e2e8f0;
+                    border: 1px solid var(--border);
                 `;
 
                 const input = document.createElement('input');
@@ -3387,10 +3387,13 @@
                 input.style.cssText = `
                     width: 100%;
                     padding: 12px 16px;
-                    border: 2px solid #e2e8f0;
+                    border: 2px solid var(--border);
                     border-radius: 8px;
                     font-size: 16px;
                     margin-bottom: 15px;
+                    background: var(--bg);
+                    color: var(--text-primary);
+                    font-family: var(--font);
                 `;
 
                 const commands = document.createElement('div');
@@ -3422,17 +3425,17 @@
                             border-radius: 8px;
                             cursor: pointer;
                             margin-bottom: 8px;
-                            background: #f8f9fa;
+                            background: var(--bg);
                             transition: all 0.2s ease;
                             display: flex;
                             align-items: center;
                             gap: 12px;
                         `;
                         item.innerHTML = `
-                            <i class="${cmd.icon}" style="color: #063a33; width: 20px;"></i>
+                            <i class="${cmd.icon}" style="color: var(--primary); width: 20px;"></i>
                             <div>
-                                <div style="font-weight: 600; color: #1a202c;">${cmd.name}</div>
-                                <div style="font-size: 13px; color: #718096;">${cmd.desc}</div>
+                                <div style="font-weight: 600; color: var(--text-primary);">${cmd.name}</div>
+                                <div style="font-size: 13px; color: var(--text-secondary);">${cmd.desc}</div>
                             </div>
                         `;
                         item.addEventListener('click', function() {
@@ -3440,10 +3443,10 @@
                             executeCommand(cmd.id);
                         });
                         item.addEventListener('mouseenter', function() {
-                            this.style.background = '#e2e8f0';
+                            this.style.background = 'var(--bg-card)';
                         });
                         item.addEventListener('mouseleave', function() {
-                            this.style.background = '#f8f9fa';
+                            this.style.background = 'var(--bg)';
                         });
                         commands.appendChild(item);
                     });
